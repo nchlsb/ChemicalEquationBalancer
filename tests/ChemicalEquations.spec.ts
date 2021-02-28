@@ -1,6 +1,7 @@
 import { countElements, makeElement, makeCompound, isBalanced } from '../src/ChemicalEquations';
 import { assert, expect } from 'chai';
 import 'mocha';
+import { difference, toString } from '../src/MapLib';
 
 describe("countElements", () => {
   it("should count 2 hydrogens and 1 oxygen in water", () => {
@@ -33,3 +34,14 @@ describe("isBalanced", () => {
     })).to.be.true;
   });
 })
+
+const a = new Map([['x', 12], ['y', 3], ['w', 10]])
+const b = new Map([['x', 10], ['y', 5], ['z', 20], ['w', 10]])
+const result = new Map([['x', 2], ['y', -2], ['z', -20], ['w', 0]])
+
+describe("differnce", () => {
+  it(`difference(${toString(a)}, ${toString(b)}) === ${toString(result)}`, () => {
+
+    expect(difference(a, b)).to.deep.equals(result, `expected ${toString(difference(a, b))} to deeply equal ${toString(result)}`)
+  });
+});
