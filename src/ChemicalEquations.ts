@@ -1,5 +1,5 @@
 export type Molecule = {
-    kind: 'List'
+    kind: 'Compound'
     molecules: Molecule[]
     subscript: number
 } | {
@@ -8,9 +8,9 @@ export type Molecule = {
     subscript: number
 }
 
-export function makeMolecule(molecules: Molecule[], subscript?: number): Molecule {
+export function makeCompound(molecules: Molecule[], subscript?: number): Molecule {
     return {
-        kind: 'List',
+        kind: 'Compound',
         molecules,
         subscript: subscript || 1
     }
@@ -27,7 +27,7 @@ export function makeElement(element: string, subscript?: number): Molecule {
 // O2
 let oxygen: Molecule = makeElement('O', 2)
 
-let water: Molecule = makeMolecule([makeElement('H', 2), makeElement('O')])
+let water: Molecule = makeCompound([makeElement('H', 2), makeElement('O')])
 
 type Equation = {
     reactants: [number, Molecule][]
@@ -75,7 +75,7 @@ export function countElements(molecule: Molecule): Map<string, number> {
     switch(molecule.kind) {
         case "Element":
             return new Map([[molecule.element, molecule.subscript]])
-        case "List":
+        case "Compound":
             return map(
                 merge(molecule.molecules.map(innerMolecule => countElements(innerMolecule))),
                 v => v * molecule.subscript
