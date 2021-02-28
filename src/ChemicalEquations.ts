@@ -1,3 +1,5 @@
+import { difference, filter, map, merge } from './MapLib'
+
 export type Molecule = {
     kind: 'Compound'
     molecules: Molecule[]
@@ -8,19 +10,19 @@ export type Molecule = {
     subscript: number
 }
 
-export function makeCompound(molecules: Molecule[], subscript?: number): Molecule {
+export function makeCompound(molecules: Molecule[], subscript = 1): Molecule {
     return {
         kind: 'Compound',
         molecules,
-        subscript: subscript || 1
+        subscript: subscript
     }
 }
 
-export function makeElement(element: string, subscript?: number): Molecule {
+export function makeElement(element: string, subscript = 1): Molecule {
     return {
         kind: 'Element',
         element,
-        subscript: subscript || 1
+        subscript: subscript
     }
 }
 
@@ -35,32 +37,7 @@ type Equation = {
 }
 
 export function isBalanced(equation: Equation): boolean {
-    const reactanctsElements = equation.reactants.map(([coefficient, molecule]) =>map(
-        countElements(molecule),
-        element => element * coefficient
-    ))
-
-    const productsElements = equation.products.map(([coefficient, molecule]) =>map(
-        countElements(molecule),
-        element => element * coefficient
-    ))
-
-    return mapEquals(merge(reactanctsElements), merge(productsElements))
-}
-
-function mapEquals(a: Map<string, number>, b: Map<string, number>): boolean {
-    return isSubset(a, b) && isSubset(b, a)
-}
-
-// a = {'brett': 20, 'nick': 30}
-// b = {'brett': 20, 'nick': 30, 'cal': 40}
-function isSubset(a: Map<string, number>, b: Map<string, number>): boolean {
-    for (let key of a.keys()) {
-        if (!b.has(key) || a.get(key) !== b.get(key))
-            return false
-    }
-
-    return true
+    return findImbalance(equation).size === 0
 }
 
 // map (on Array) :::: map :: (a -> b) -> (List)<a>   -> (List)<b>
@@ -71,34 +48,25 @@ function isSubset(a: Map<string, number>, b: Map<string, number>): boolean {
 // 2 * H20 = 2 * {H: 2, O: 1} => {H: 2 * 2, O: 1 * 2}
 // H: 4
 // O: 2
-export function countElements(molecule: Molecule): Map<string, number> {
+export function countElements(molecule: Molecule, coefficient = 1): Map<string, number> {
     switch(molecule.kind) {
         case "Element":
-            return new Map([[molecule.element, molecule.subscript]])
+            return map(new Map([[molecule.element, molecule.subscript]]), v => v * coefficient)
         case "Compound":
             return map(
                 merge(molecule.molecules.map(innerMolecule => countElements(innerMolecule))),
-                v => v * molecule.subscript
+                v => v * molecule.subscript * coefficient
             );
     }
 }
 
-function merge(maps: Map<string, number>[]): Map<string, number> {
-    let retVal = new Map<string, number>();
-    maps.forEach(map => {
-        map.forEach((value, key) => {
-            retVal.set(key, value + (retVal.get(key) || 0))
-        })
-    })
+// Map Law !!
+// map(map(xs, f), g) === map(xs, g . f)
+// xs.map(f).map(g) === xs.map(x => g(f(x)))
+export function findImbalance(equation: Equation): Map<string, number> {
+    const reactantsCount = merge(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
+    const productsCount = merge(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
 
-    return retVal
+    return filter(difference(reactantsCount, productsCount), elementCount => elementCount !== 0)
 }
 
-export function map<K, A, B>(map: Map<K, A>, f: (a: A) => B): Map<K, B> {
-    let retVal = new Map<K, B>();
-    map.forEach((value, key) => {
-        retVal.set(key, f(value))
-    })
-
-    return retVal;
-}
