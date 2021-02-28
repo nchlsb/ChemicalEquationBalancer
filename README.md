@@ -5,6 +5,6 @@
 - [ ] Pull down molecules graphically to balance the equation
 - [ ] Alternatively, change the coefficient for symbolic manipulation (and let the appropriate number of graphical molecules automatically appear)
 - [x] Keep track of the total number of elements on each side
-- [ ] Keep track of what "overflow" elements need to be compensated for (i.e. "You need to have 4 more hydrogen in the result for the equation to balance.")
+- [x] Keep track of what imbalanced elements need to be compensated for (i.e. "You need to have 4 more hydrogen in the result for the equation to balance.")
 - [x] Change "List" to a better name in the Molecule type
 - [ ] Find balancing equation examples
