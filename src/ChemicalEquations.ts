@@ -70,3 +70,66 @@ export function findImbalance(equation: Equation): Map<string, number> {
     return filter(difference(reactantsCount, productsCount), elementCount => elementCount !== 0)
 }
 
+
+export const examples: Equation[] = [
+    equationWithCoefficient1([
+        makeElement('H', 2),
+        makeElement('O', 2)
+    ], [
+        H_2O()
+    ]),
+
+    equationWithCoefficient1([
+        makeCompound([
+            makeElement('C'),
+            makeElement('O', 2)
+        ]),
+        H_2O()
+    ], [
+        makeCompound([
+            makeElement('C', 6),
+            makeElement('H', 12),
+            makeElement('O', 6)
+        ]),
+        makeElement('O', 2)
+    ]),
+
+    equationWithCoefficient1([
+        makeCompound([
+        makeElement('H', 2),
+            makeElement('S'),
+            makeElement('O', 4)
+        ]),
+    
+        makeCompound([
+            makeElement('H'),
+            makeElement('I')
+        ])
+    ], [
+        makeCompound([makeElement('H', 2), makeElement('S')]),
+        makeElement('I', 2),
+        H_2O()
+    ])
+]
+
+export function randomEquation(): Equation {
+    return examples[randomIntegerUpTo(examples.length)]
+}
+
+function randomIntegerUpTo(max: number): number {
+    const between0and1 = Math.random()
+    const floatBetween0andMax = between0and1 * max
+    return Math.floor(floatBetween0andMax)
+}
+
+// CO2 + H2O → C6H12O6 + O2
+// SiCl4 + H2O → H4SiO4 + HCl
+// Al + HCl → AlCl3 + H2
+// Na2CO3 + HCl → NaCl + H2O + CO2
+// C7H6O2 + O2 → CO2 + H2O
+// Fe2(SO4)3 + KOH → K2SO4 + Fe(OH)3
+// Ca(PO4)2 + SiO2 → P4O10 + CaSiO3
+// KClO3 → KClO4 + KCl
+// Al2(SO4)3 + Ca(OH)2 → Al(OH)3 + CaSO4
+// H2SO4 + HI → H2S + I2 + H2O
+
