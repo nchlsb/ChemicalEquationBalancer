@@ -27,6 +27,13 @@ var app = (function () {
     function is_empty(obj) {
         return Object.keys(obj).length === 0;
     }
+    function subscribe(store, ...callbacks) {
+        if (store == null) {
+            return noop;
+        }
+        const unsub = store.subscribe(...callbacks);
+        return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
+    }
 
     function append(target, node) {
         target.appendChild(node);
@@ -152,12 +159,6 @@ var app = (function () {
             block.i(local);
         }
     }
-
-    const globals = (typeof window !== 'undefined'
-        ? window
-        : typeof globalThis !== 'undefined'
-            ? globalThis
-            : global);
     function mount_component(component, target, anchor) {
         const { fragment, on_mount, on_destroy, after_update } = component.$$;
         fragment && fragment.m(target, anchor);
@@ -357,51 +358,32 @@ var app = (function () {
         $inject_state() { }
     }
 
-    function makeMolecule(molecules, subscript) {
-        return {
-            kind: 'List',
-            molecules,
-            subscript: subscript || 1
-        };
+    function map(map, f) {
+        let retVal = new Map();
+        map.forEach((value, key) => {
+            retVal.set(key, f(value));
+        });
+        return retVal;
     }
-    function makeElement(element, subscript) {
-        return {
-            kind: 'Element',
-            element,
-            subscript: subscript || 1
-        };
+    function filter(map, predicate) {
+        let retVal = new Map();
+        map.forEach((value, key) => {
+            if (predicate(value)) {
+                retVal.set(key, value);
+            }
+        });
+        return retVal;
     }
-    function isBalanced(equation) {
-        const reactanctsElements = equation.reactants.map(([coefficient, molecule]) => map(countElements(molecule), element => element * coefficient));
-        const productsElements = equation.products.map(([coefficient, molecule]) => map(countElements(molecule), element => element * coefficient));
-        return mapEquals(merge(reactanctsElements), merge(productsElements));
-    }
-    function mapEquals(a, b) {
-        return isSubset(a, b) && isSubset(b, a);
-    }
-    // a = {'brett': 20, 'nick': 30}
-    // b = {'brett': 20, 'nick': 30, 'cal': 40}
-    function isSubset(a, b) {
-        for (let key of a.keys()) {
-            if (!b.has(key) || a.get(key) !== b.get(key))
-                return false;
+    function difference(a, b) {
+        const allKeys = new Set([...a.keys(), ...b.keys()]);
+        let map = new Map();
+        for (let key of allKeys.values()) {
+            map.set(key, (a.get(key) || 0) - (b.get(key) || 0));
         }
-        return true;
+        return map; //filter(map, v => v !== 0)
     }
-    // map (on Array) :::: map :: (a -> b) -> (List)<a>   -> (List)<b>
-    // map (on Map<K, V>)  map :: (a -> b) -> (Map<K>)<a> -> (Map<K>)<b>
-    // map (on Maybe)      map :: (a -> b) -> (Maybe)<a>  -> (Maybe)<b>
-    // map :: (a -> b) -> F<a> -> F<b>
-    // 2 * H20 = 2 * {H: 2, O: 1} => {H: 2 * 2, O: 1 * 2}
-    // H: 4
-    // O: 2
-    function countElements(molecule) {
-        switch (molecule.kind) {
-            case "Element":
-                return new Map([[molecule.element, molecule.subscript]]);
-            case "List":
-                return map(merge(molecule.molecules.map(innerMolecule => countElements(innerMolecule))), v => v * molecule.subscript);
-        }
+    function toString(map) {
+        return `{ ${[...map.entries()].map(([k, v]) => `${k}: ${v}`).join(', ')} }`;
     }
     function merge(maps) {
         let retVal = new Map();
@@ -412,119 +394,196 @@ var app = (function () {
         });
         return retVal;
     }
-    function map(map, f) {
-        let retVal = new Map();
-        map.forEach((value, key) => {
-            retVal.set(key, f(value));
-        });
-        return retVal;
+
+    function makeCompound(molecules, subscript = 1) {
+        return {
+            kind: 'Compound',
+            molecules,
+            subscript: subscript
+        };
     }
+    function makeElement(element, subscript = 1) {
+        return {
+            kind: 'Element',
+            element,
+            subscript: subscript
+        };
+    }
+    function H_2O() {
+        return makeCompound([makeElement('H', 2), makeElement('O')]);
+    }
+    // ? H_2 + ? O_2 -->  ? H_2O
+    // 1 H_2 + 1 O_2 ---> 1 H_2O
+    // ...
+    // 2 H_2 + 1 O_2 --> 2 H_2O
+    function equationWithCoefficient1(reactants, products) {
+        return {
+            // [number, Molecule][] = Molecule[]    <====> [number, Molecule] = Molecule
+            reactants: reactants.map(reactant => [1, reactant]),
+            products: products.map(product => [1, product])
+        };
+    }
+    function isBalanced(equation) {
+        return findImbalance(equation).size === 0;
+    }
+    // map (on Array) :::: map :: (a -> b) -> (List)<a>   -> (List)<b>
+    // map (on Map<K, V>)  map :: (a -> b) -> (Map<K>)<a> -> (Map<K>)<b>
+    // map (on Maybe)      map :: (a -> b) -> (Maybe)<a>  -> (Maybe)<b>
+    // map :: (a -> b) -> F<a> -> F<b>
+    // 2 * H20 = 2 * {H: 2, O: 1} => {H: 2 * 2, O: 1 * 2}
+    // H: 4
+    // O: 2
+    function countElements(molecule, coefficient = 1) {
+        switch (molecule.kind) {
+            case "Element":
+                return map(new Map([[molecule.element, molecule.subscript]]), v => v * coefficient);
+            case "Compound":
+                return map(merge(molecule.molecules.map(innerMolecule => countElements(innerMolecule))), v => v * molecule.subscript * coefficient);
+        }
+    }
+    // Map Law !!
+    // map(map(xs, f), g) === map(xs, g . f)
+    // xs.map(f).map(g) === xs.map(x => g(f(x)))
+    function findImbalance(equation) {
+        const reactantsCount = merge(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)));
+        const productsCount = merge(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)));
+        return filter(difference(reactantsCount, productsCount), elementCount => elementCount !== 0);
+    }
+    const examples = [
+        equationWithCoefficient1([
+            makeElement('H', 2),
+            makeElement('O', 2)
+        ], [
+            H_2O()
+        ]),
+        equationWithCoefficient1([
+            makeCompound([
+                makeElement('C'),
+                makeElement('O', 2)
+            ]),
+            H_2O()
+        ], [
+            makeCompound([
+                makeElement('C', 6),
+                makeElement('H', 12),
+                makeElement('O', 6)
+            ]),
+            makeElement('O', 2)
+        ]),
+        equationWithCoefficient1([
+            makeCompound([
+                makeElement('H', 2),
+                makeElement('S'),
+                makeElement('O', 4)
+            ]),
+            makeCompound([
+                makeElement('H'),
+                makeElement('I')
+            ])
+        ], [
+            makeCompound([makeElement('H', 2), makeElement('S')]),
+            makeElement('I', 2),
+            H_2O()
+        ])
+    ];
+    function randomEquation() {
+        return examples[randomIntegerUpTo(examples.length)];
+    }
+    function randomIntegerUpTo(max) {
+        const between0and1 = Math.random();
+        const floatBetween0andMax = between0and1 * max;
+        return Math.floor(floatBetween0andMax);
+    }
+    // CO2 + H2O → C6H12O6 + O2
+    // SiCl4 + H2O → H4SiO4 + HCl
+    // Al + HCl → AlCl3 + H2
+    // Na2CO3 + HCl → NaCl + H2O + CO2
+    // C7H6O2 + O2 → CO2 + H2O
+    // Fe2(SO4)3 + KOH → K2SO4 + Fe(OH)3
+    // Ca(PO4)2 + SiO2 → P4O10 + CaSiO3
+    // KClO3 → KClO4 + KCl
+    // Al2(SO4)3 + Ca(OH)2 → Al(OH)3 + CaSO4
+    // H2SO4 + HI → H2S + I2 + H2O
 
     /* src\App.svelte generated by Svelte v3.32.3 */
-
-    const { console: console_1 } = globals;
-
     const file = "src\\App.svelte";
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[14] = list[i][0];
-    	child_ctx[15] = list[i][1];
+    	child_ctx[6] = list[i][0];
+    	child_ctx[7] = list[i][1];
+    	child_ctx[8] = list;
+    	child_ctx[9] = i;
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[14] = list[i][0];
-    	child_ctx[15] = list[i][1];
+    	child_ctx[6] = list[i][0];
+    	child_ctx[7] = list[i][1];
+    	child_ctx[10] = list;
+    	child_ctx[9] = i;
     	return child_ctx;
     }
 
-    function get_each_context_2(ctx, list, i) {
-    	const child_ctx = ctx.slice();
-    	child_ctx[14] = list[i][0];
-    	child_ctx[15] = list[i][1];
-    	return child_ctx;
-    }
-
-    // (24:2) {#each [...elementsOfH2.entries()] as [key, value]}
-    function create_each_block_2(ctx) {
-    	let li;
-    	let t0_value = /*key*/ ctx[14] + "";
-    	let t0;
-    	let t1;
-    	let t2_value = /*value*/ ctx[15] + "";
-    	let t2;
-    	let t3;
-
-    	const block = {
-    		c: function create() {
-    			li = element("li");
-    			t0 = text(t0_value);
-    			t1 = text(" --> ");
-    			t2 = text(t2_value);
-    			t3 = space();
-    			add_location(li, file, 24, 3, 864);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, li, anchor);
-    			append_dev(li, t0);
-    			append_dev(li, t1);
-    			append_dev(li, t2);
-    			append_dev(li, t3);
-    		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*elementsOfH2*/ 16 && t0_value !== (t0_value = /*key*/ ctx[14] + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*elementsOfH2*/ 16 && t2_value !== (t2_value = /*value*/ ctx[15] + "")) set_data_dev(t2, t2_value);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(li);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_each_block_2.name,
-    		type: "each",
-    		source: "(24:2) {#each [...elementsOfH2.entries()] as [key, value]}",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (32:2) {#each [...elementsOfO2.entries()] as [key, value]}
+    // (28:1) {#each equation.reactants as [coefficient, molecule], index}
     function create_each_block_1(ctx) {
-    	let li;
-    	let t0_value = /*key*/ ctx[14] + "";
+    	let p;
+    	let input;
     	let t0;
+    	let t1_value = toString$1(/*molecule*/ ctx[7]) + "";
     	let t1;
-    	let t2_value = /*value*/ ctx[15] + "";
-    	let t2;
-    	let t3;
+    	let mounted;
+    	let dispose;
+
+    	function input_input_handler() {
+    		/*input_input_handler*/ ctx[2].call(input, /*each_value_1*/ ctx[10], /*index*/ ctx[9]);
+    	}
+
+    	function input_handler(...args) {
+    		return /*input_handler*/ ctx[3](/*index*/ ctx[9], /*molecule*/ ctx[7], ...args);
+    	}
 
     	const block = {
     		c: function create() {
-    			li = element("li");
-    			t0 = text(t0_value);
-    			t1 = text(" --> ");
-    			t2 = text(t2_value);
-    			t3 = space();
-    			add_location(li, file, 32, 3, 989);
+    			p = element("p");
+    			input = element("input");
+    			t0 = space();
+    			t1 = text(t1_value);
+    			attr_dev(input, "type", "number");
+    			attr_dev(input, "min", "1");
+    			add_location(input, file, 28, 5, 1076);
+    			add_location(p, file, 28, 2, 1073);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, li, anchor);
-    			append_dev(li, t0);
-    			append_dev(li, t1);
-    			append_dev(li, t2);
-    			append_dev(li, t3);
+    			insert_dev(target, p, anchor);
+    			append_dev(p, input);
+    			set_input_value(input, /*coefficient*/ ctx[6]);
+    			append_dev(p, t0);
+    			append_dev(p, t1);
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(input, "input", input_input_handler),
+    					listen_dev(input, "input", input_handler, false, false, false)
+    				];
+
+    				mounted = true;
+    			}
     		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*elementsOfO2*/ 32 && t0_value !== (t0_value = /*key*/ ctx[14] + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*elementsOfO2*/ 32 && t2_value !== (t2_value = /*value*/ ctx[15] + "")) set_data_dev(t2, t2_value);
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
+    			if (dirty & /*equation*/ 2 && to_number(input.value) !== /*coefficient*/ ctx[6]) {
+    				set_input_value(input, /*coefficient*/ ctx[6]);
+    			}
+
+    			if (dirty & /*equation*/ 2 && t1_value !== (t1_value = toString$1(/*molecule*/ ctx[7]) + "")) set_data_dev(t1, t1_value);
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(li);
+    			if (detaching) detach_dev(p);
+    			mounted = false;
+    			run_all(dispose);
     		}
     	};
 
@@ -532,45 +591,71 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(32:2) {#each [...elementsOfO2.entries()] as [key, value]}",
+    		source: "(28:1) {#each equation.reactants as [coefficient, molecule], index}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (40:2) {#each [...elementsOfH2O.entries()] as [key, value]}
+    // (45:1) {#each equation.products as [coefficient, molecule], index}
     function create_each_block(ctx) {
-    	let li;
-    	let t0_value = /*key*/ ctx[14] + "";
+    	let p;
+    	let input;
     	let t0;
+    	let t1_value = toString$1(/*molecule*/ ctx[7]) + "";
     	let t1;
-    	let t2_value = /*value*/ ctx[15] + "";
-    	let t2;
-    	let t3;
+    	let mounted;
+    	let dispose;
+
+    	function input_input_handler_1() {
+    		/*input_input_handler_1*/ ctx[4].call(input, /*each_value*/ ctx[8], /*index*/ ctx[9]);
+    	}
+
+    	function input_handler_1(...args) {
+    		return /*input_handler_1*/ ctx[5](/*index*/ ctx[9], /*molecule*/ ctx[7], ...args);
+    	}
 
     	const block = {
     		c: function create() {
-    			li = element("li");
-    			t0 = text(t0_value);
-    			t1 = text(" --> ");
-    			t2 = text(t2_value);
-    			t3 = space();
-    			add_location(li, file, 40, 3, 1115);
+    			p = element("p");
+    			input = element("input");
+    			t0 = space();
+    			t1 = text(t1_value);
+    			attr_dev(input, "type", "number");
+    			attr_dev(input, "min", "1");
+    			add_location(input, file, 45, 5, 1497);
+    			add_location(p, file, 45, 2, 1494);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, li, anchor);
-    			append_dev(li, t0);
-    			append_dev(li, t1);
-    			append_dev(li, t2);
-    			append_dev(li, t3);
+    			insert_dev(target, p, anchor);
+    			append_dev(p, input);
+    			set_input_value(input, /*coefficient*/ ctx[6]);
+    			append_dev(p, t0);
+    			append_dev(p, t1);
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(input, "input", input_input_handler_1),
+    					listen_dev(input, "input", input_handler_1, false, false, false)
+    				];
+
+    				mounted = true;
+    			}
     		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*elementsOfH2O*/ 64 && t0_value !== (t0_value = /*key*/ ctx[14] + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*elementsOfH2O*/ 64 && t2_value !== (t2_value = /*value*/ ctx[15] + "")) set_data_dev(t2, t2_value);
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
+    			if (dirty & /*equation*/ 2 && to_number(input.value) !== /*coefficient*/ ctx[6]) {
+    				set_input_value(input, /*coefficient*/ ctx[6]);
+    			}
+
+    			if (dirty & /*equation*/ 2 && t1_value !== (t1_value = toString$1(/*molecule*/ ctx[7]) + "")) set_data_dev(t1, t1_value);
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(li);
+    			if (detaching) detach_dev(p);
+    			mounted = false;
+    			run_all(dispose);
     		}
     	};
 
@@ -578,7 +663,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(40:2) {#each [...elementsOfH2O.entries()] as [key, value]}",
+    		source: "(45:1) {#each equation.products as [coefficient, molecule], index}",
     		ctx
     	});
 
@@ -587,53 +672,27 @@ var app = (function () {
 
     function create_fragment(ctx) {
     	let main;
-    	let input0;
     	let t0;
-    	let input1;
     	let t1;
-    	let input2;
-    	let t2;
-    	let ul0;
-    	let t3;
-    	let ul1;
-    	let t4;
-    	let ul2;
-    	let t5;
-    	let button;
-    	let t7;
     	let p0;
+    	let t2_value = toString(findImbalance(/*equation*/ ctx[1])) + "";
+    	let t2;
+    	let t3;
+    	let p1;
+    	let t4;
+    	let t5_value = isBalanced(/*equation*/ ctx[1]) + "";
+    	let t5;
+    	let t6;
+    	let h1;
+    	let t7;
     	let t8;
-
-    	let t9_value = isBalanced({
-    		reactants: [
-    			[/*h2Coefficient*/ ctx[1], /*h2*/ ctx[7]],
-    			[/*o2Coefficient*/ ctx[2], /*o2*/ ctx[8]]
-    		],
-    		products: [[/*h2oCoefficient*/ ctx[3], /*h2o*/ ctx[9]]]
-    	}) + "";
-
     	let t9;
     	let t10;
-    	let h1;
+    	let p2;
     	let t11;
-    	let t12;
-    	let t13;
-    	let t14;
-    	let p1;
-    	let t15;
     	let a;
-    	let t17;
-    	let mounted;
-    	let dispose;
-    	let each_value_2 = [.../*elementsOfH2*/ ctx[4].entries()];
-    	validate_each_argument(each_value_2);
-    	let each_blocks_2 = [];
-
-    	for (let i = 0; i < each_value_2.length; i += 1) {
-    		each_blocks_2[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
-    	}
-
-    	let each_value_1 = [.../*elementsOfO2*/ ctx[5].entries()];
+    	let t13;
+    	let each_value_1 = /*equation*/ ctx[1].reactants;
     	validate_each_argument(each_value_1);
     	let each_blocks_1 = [];
 
@@ -641,7 +700,7 @@ var app = (function () {
     		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
     	}
 
-    	let each_value = [.../*elementsOfH2O*/ ctx[6].entries()];
+    	let each_value = /*equation*/ ctx[1].products;
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -652,170 +711,82 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			main = element("main");
-    			input0 = element("input");
-    			t0 = text("H_2 + ");
-    			input1 = element("input");
-    			t1 = text("O_2\r\n\t-->\r\n\t");
-    			input2 = element("input");
-    			t2 = text("H_2O\r\n\r\n\t");
-    			ul0 = element("ul");
-
-    			for (let i = 0; i < each_blocks_2.length; i += 1) {
-    				each_blocks_2[i].c();
-    			}
-
-    			t3 = space();
-    			ul1 = element("ul");
 
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
     				each_blocks_1[i].c();
     			}
 
-    			t4 = space();
-    			ul2 = element("ul");
+    			t0 = text("\r\n\t-->\r\n\t\r\n\t");
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			t5 = space();
-    			button = element("button");
-    			button.textContent = "Brett";
-    			t7 = space();
+    			t1 = space();
     			p0 = element("p");
-    			t8 = text("Is balanced: ");
-    			t9 = text(t9_value);
-    			t10 = space();
-    			h1 = element("h1");
-    			t11 = text("Hello ");
-    			t12 = text(/*name*/ ctx[0]);
-    			t13 = text("!");
-    			t14 = space();
+    			t2 = text(t2_value);
+    			t3 = space();
     			p1 = element("p");
-    			t15 = text("Visit the ");
+    			t4 = text("Is balanced: ");
+    			t5 = text(t5_value);
+    			t6 = space();
+    			h1 = element("h1");
+    			t7 = text("Hello ");
+    			t8 = text(/*name*/ ctx[0]);
+    			t9 = text("!");
+    			t10 = space();
+    			p2 = element("p");
+    			t11 = text("Visit the ");
     			a = element("a");
     			a.textContent = "Svelte tutorial";
-    			t17 = text(" to learn how to build Svelte apps.");
-    			attr_dev(input0, "type", "number");
-    			add_location(input0, file, 18, 1, 628);
-    			attr_dev(input1, "type", "number");
-    			add_location(input1, file, 18, 55, 682);
-    			attr_dev(input2, "type", "number");
-    			add_location(input2, file, 20, 1, 742);
-    			add_location(ul0, file, 22, 1, 800);
-    			add_location(ul1, file, 30, 1, 925);
-    			add_location(ul2, file, 38, 1, 1050);
-    			add_location(button, file, 47, 1, 1178);
-    			add_location(p0, file, 53, 1, 1420);
+    			t13 = text(" to learn how to build Svelte apps.");
+    			add_location(p0, file, 60, 1, 1829);
+    			add_location(p1, file, 63, 1, 1884);
     			attr_dev(h1, "class", "svelte-1tky8bj");
-    			add_location(h1, file, 60, 1, 1573);
+    			add_location(h1, file, 67, 1, 1938);
     			attr_dev(a, "href", "https://svelte.dev/tutorial");
-    			add_location(a, file, 61, 14, 1611);
-    			add_location(p1, file, 61, 1, 1598);
+    			add_location(a, file, 68, 14, 1976);
+    			add_location(p2, file, 68, 1, 1963);
     			attr_dev(main, "class", "svelte-1tky8bj");
-    			add_location(main, file, 17, 0, 619);
+    			add_location(main, file, 25, 0, 980);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, main, anchor);
-    			append_dev(main, input0);
-    			set_input_value(input0, /*h2Coefficient*/ ctx[1]);
-    			append_dev(main, t0);
-    			append_dev(main, input1);
-    			set_input_value(input1, /*o2Coefficient*/ ctx[2]);
-    			append_dev(main, t1);
-    			append_dev(main, input2);
-    			set_input_value(input2, /*h2oCoefficient*/ ctx[3]);
-    			append_dev(main, t2);
-    			append_dev(main, ul0);
-
-    			for (let i = 0; i < each_blocks_2.length; i += 1) {
-    				each_blocks_2[i].m(ul0, null);
-    			}
-
-    			append_dev(main, t3);
-    			append_dev(main, ul1);
 
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].m(ul1, null);
+    				each_blocks_1[i].m(main, null);
     			}
 
-    			append_dev(main, t4);
-    			append_dev(main, ul2);
+    			append_dev(main, t0);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].m(ul2, null);
+    				each_blocks[i].m(main, null);
     			}
 
-    			append_dev(main, t5);
-    			append_dev(main, button);
-    			append_dev(main, t7);
+    			append_dev(main, t1);
     			append_dev(main, p0);
-    			append_dev(p0, t8);
-    			append_dev(p0, t9);
-    			append_dev(main, t10);
-    			append_dev(main, h1);
-    			append_dev(h1, t11);
-    			append_dev(h1, t12);
-    			append_dev(h1, t13);
-    			append_dev(main, t14);
+    			append_dev(p0, t2);
+    			append_dev(main, t3);
     			append_dev(main, p1);
-    			append_dev(p1, t15);
-    			append_dev(p1, a);
-    			append_dev(p1, t17);
-
-    			if (!mounted) {
-    				dispose = [
-    					listen_dev(input0, "input", /*input0_input_handler*/ ctx[10]),
-    					listen_dev(input1, "input", /*input1_input_handler*/ ctx[11]),
-    					listen_dev(input2, "input", /*input2_input_handler*/ ctx[12]),
-    					listen_dev(button, "click", /*click_handler*/ ctx[13], false, false, false)
-    				];
-
-    				mounted = true;
-    			}
+    			append_dev(p1, t4);
+    			append_dev(p1, t5);
+    			append_dev(main, t6);
+    			append_dev(main, h1);
+    			append_dev(h1, t7);
+    			append_dev(h1, t8);
+    			append_dev(h1, t9);
+    			append_dev(main, t10);
+    			append_dev(main, p2);
+    			append_dev(p2, t11);
+    			append_dev(p2, a);
+    			append_dev(p2, t13);
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*h2Coefficient*/ 2 && to_number(input0.value) !== /*h2Coefficient*/ ctx[1]) {
-    				set_input_value(input0, /*h2Coefficient*/ ctx[1]);
-    			}
-
-    			if (dirty & /*o2Coefficient*/ 4 && to_number(input1.value) !== /*o2Coefficient*/ ctx[2]) {
-    				set_input_value(input1, /*o2Coefficient*/ ctx[2]);
-    			}
-
-    			if (dirty & /*h2oCoefficient*/ 8 && to_number(input2.value) !== /*h2oCoefficient*/ ctx[3]) {
-    				set_input_value(input2, /*h2oCoefficient*/ ctx[3]);
-    			}
-
-    			if (dirty & /*elementsOfH2*/ 16) {
-    				each_value_2 = [.../*elementsOfH2*/ ctx[4].entries()];
-    				validate_each_argument(each_value_2);
-    				let i;
-
-    				for (i = 0; i < each_value_2.length; i += 1) {
-    					const child_ctx = get_each_context_2(ctx, each_value_2, i);
-
-    					if (each_blocks_2[i]) {
-    						each_blocks_2[i].p(child_ctx, dirty);
-    					} else {
-    						each_blocks_2[i] = create_each_block_2(child_ctx);
-    						each_blocks_2[i].c();
-    						each_blocks_2[i].m(ul0, null);
-    					}
-    				}
-
-    				for (; i < each_blocks_2.length; i += 1) {
-    					each_blocks_2[i].d(1);
-    				}
-
-    				each_blocks_2.length = each_value_2.length;
-    			}
-
-    			if (dirty & /*elementsOfO2*/ 32) {
-    				each_value_1 = [.../*elementsOfO2*/ ctx[5].entries()];
+    			if (dirty & /*toString, equation, replaceAtIndex, parseInt*/ 2) {
+    				each_value_1 = /*equation*/ ctx[1].reactants;
     				validate_each_argument(each_value_1);
     				let i;
 
@@ -827,7 +798,7 @@ var app = (function () {
     					} else {
     						each_blocks_1[i] = create_each_block_1(child_ctx);
     						each_blocks_1[i].c();
-    						each_blocks_1[i].m(ul1, null);
+    						each_blocks_1[i].m(main, t0);
     					}
     				}
 
@@ -838,8 +809,8 @@ var app = (function () {
     				each_blocks_1.length = each_value_1.length;
     			}
 
-    			if (dirty & /*elementsOfH2O*/ 64) {
-    				each_value = [.../*elementsOfH2O*/ ctx[6].entries()];
+    			if (dirty & /*toString, equation, replaceAtIndex, parseInt*/ 2) {
+    				each_value = /*equation*/ ctx[1].products;
     				validate_each_argument(each_value);
     				let i;
 
@@ -851,7 +822,7 @@ var app = (function () {
     					} else {
     						each_blocks[i] = create_each_block(child_ctx);
     						each_blocks[i].c();
-    						each_blocks[i].m(ul2, null);
+    						each_blocks[i].m(main, t1);
     					}
     				}
 
@@ -862,25 +833,16 @@ var app = (function () {
     				each_blocks.length = each_value.length;
     			}
 
-    			if (dirty & /*h2Coefficient, o2Coefficient, h2oCoefficient*/ 14 && t9_value !== (t9_value = isBalanced({
-    				reactants: [
-    					[/*h2Coefficient*/ ctx[1], /*h2*/ ctx[7]],
-    					[/*o2Coefficient*/ ctx[2], /*o2*/ ctx[8]]
-    				],
-    				products: [[/*h2oCoefficient*/ ctx[3], /*h2o*/ ctx[9]]]
-    			}) + "")) set_data_dev(t9, t9_value);
-
-    			if (dirty & /*name*/ 1) set_data_dev(t12, /*name*/ ctx[0]);
+    			if (dirty & /*equation*/ 2 && t2_value !== (t2_value = toString(findImbalance(/*equation*/ ctx[1])) + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*equation*/ 2 && t5_value !== (t5_value = isBalanced(/*equation*/ ctx[1]) + "")) set_data_dev(t5, t5_value);
+    			if (dirty & /*name*/ 1) set_data_dev(t8, /*name*/ ctx[0]);
     		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(main);
-    			destroy_each(each_blocks_2, detaching);
     			destroy_each(each_blocks_1, detaching);
     			destroy_each(each_blocks, detaching);
-    			mounted = false;
-    			run_all(dispose);
     		}
     	};
 
@@ -895,45 +857,63 @@ var app = (function () {
     	return block;
     }
 
+    function replaceAtIndex(array, index, value) {
+    	let retVal = new Array();
+
+    	for (let i = 0; i < array.length; i++) {
+    		retVal[i] = i === index ? value : array[i];
+    	}
+
+    	return retVal;
+    }
+
+    function toString$1(molecule) {
+    	switch (molecule.kind) {
+    		case "Element":
+    			return molecule.subscript === 1
+    			? `${molecule.element}`
+    			: `${molecule.element}_${molecule.subscript}`;
+    		case "Compound":
+    			return molecule.subscript === 1
+    			? `${molecule.molecules.map(molecule => toString$1(molecule)).join("")}`
+    			: `(${molecule.molecules.map(molecule => toString$1(molecule)).join("")})_${molecule.subscript}`;
+    	}
+    }
+
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("App", slots, []);
     	
     	let { name } = $$props;
-    	let h2Coefficient = 1;
-    	let o2Coefficient = 1;
-    	let h2oCoefficient = 1;
-    	const h2 = makeElement("H", 2);
-    	const o2 = makeElement("O", 2);
-    	const h2o = makeMolecule([makeElement("H", 2), makeElement("O")]);
-    	let elementsOfH2;
-    	let elementsOfO2;
-    	let elementsOfH2O;
+    	let equation = randomEquation();
     	const writable_props = ["name"];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<App> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
-    	function input0_input_handler() {
-    		h2Coefficient = to_number(this.value);
-    		$$invalidate(1, h2Coefficient);
+    	function input_input_handler(each_value_1, index) {
+    		each_value_1[index][0] = to_number(this.value);
+    		$$invalidate(1, equation);
     	}
 
-    	function input1_input_handler() {
-    		o2Coefficient = to_number(this.value);
-    		$$invalidate(2, o2Coefficient);
+    	const input_handler = (index, molecule, event) => {
+    		$$invalidate(1, equation = {
+    			reactants: replaceAtIndex(equation.reactants, index, [parseInt(event.currentTarget.value), molecule]),
+    			products: equation.products
+    		});
+    	};
+
+    	function input_input_handler_1(each_value, index) {
+    		each_value[index][0] = to_number(this.value);
+    		$$invalidate(1, equation);
     	}
 
-    	function input2_input_handler() {
-    		h2oCoefficient = to_number(this.value);
-    		$$invalidate(3, h2oCoefficient);
-    	}
-
-    	const click_handler = () => {
-    		console.log(map(countElements(h2), v => v * h2Coefficient));
-    		console.log(map(countElements(o2), v => v * o2Coefficient));
-    		console.log(map(countElements(h2o), v => v * h2oCoefficient));
+    	const input_handler_1 = (index, molecule, event) => {
+    		$$invalidate(1, equation = {
+    			products: replaceAtIndex(equation.products, index, [parseInt(event.currentTarget.value), molecule]),
+    			reactants: equation.reactants
+    		});
     	};
 
     	$$self.$$set = $$props => {
@@ -942,65 +922,33 @@ var app = (function () {
 
     	$$self.$capture_state = () => ({
     		countElements,
+    		findImbalance,
     		isBalanced,
-    		makeElement,
-    		makeMolecule,
-    		map,
+    		randomEquation,
+    		toStringMap: toString,
+    		subscribe,
     		name,
-    		h2Coefficient,
-    		o2Coefficient,
-    		h2oCoefficient,
-    		h2,
-    		o2,
-    		h2o,
-    		elementsOfH2,
-    		elementsOfO2,
-    		elementsOfH2O
+    		equation,
+    		replaceAtIndex,
+    		toString: toString$1
     	});
 
     	$$self.$inject_state = $$props => {
     		if ("name" in $$props) $$invalidate(0, name = $$props.name);
-    		if ("h2Coefficient" in $$props) $$invalidate(1, h2Coefficient = $$props.h2Coefficient);
-    		if ("o2Coefficient" in $$props) $$invalidate(2, o2Coefficient = $$props.o2Coefficient);
-    		if ("h2oCoefficient" in $$props) $$invalidate(3, h2oCoefficient = $$props.h2oCoefficient);
-    		if ("elementsOfH2" in $$props) $$invalidate(4, elementsOfH2 = $$props.elementsOfH2);
-    		if ("elementsOfO2" in $$props) $$invalidate(5, elementsOfO2 = $$props.elementsOfO2);
-    		if ("elementsOfH2O" in $$props) $$invalidate(6, elementsOfH2O = $$props.elementsOfH2O);
+    		if ("equation" in $$props) $$invalidate(1, equation = $$props.equation);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*h2Coefficient*/ 2) {
-    			$$invalidate(4, elementsOfH2 = map(countElements(h2), v => v * h2Coefficient));
-    		}
-
-    		if ($$self.$$.dirty & /*o2Coefficient*/ 4) {
-    			$$invalidate(5, elementsOfO2 = map(countElements(o2), v => v * o2Coefficient));
-    		}
-
-    		if ($$self.$$.dirty & /*h2oCoefficient*/ 8) {
-    			$$invalidate(6, elementsOfH2O = map(countElements(h2o), v => v * h2oCoefficient));
-    		}
-    	};
-
     	return [
     		name,
-    		h2Coefficient,
-    		o2Coefficient,
-    		h2oCoefficient,
-    		elementsOfH2,
-    		elementsOfO2,
-    		elementsOfH2O,
-    		h2,
-    		o2,
-    		h2o,
-    		input0_input_handler,
-    		input1_input_handler,
-    		input2_input_handler,
-    		click_handler
+    		equation,
+    		input_input_handler,
+    		input_handler,
+    		input_input_handler_1,
+    		input_handler_1
     	];
     }
 
@@ -1020,7 +968,7 @@ var app = (function () {
     		const props = options.props || {};
 
     		if (/*name*/ ctx[0] === undefined && !("name" in props)) {
-    			console_1.warn("<App> was created without expected prop 'name'");
+    			console.warn("<App> was created without expected prop 'name'");
     		}
     	}
 
