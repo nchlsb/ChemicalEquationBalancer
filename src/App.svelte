@@ -1,67 +1,74 @@
 <script lang="ts">
-	import { countElements, isBalanced, makeElement, makeMolecule, map } from "./ChemicalEquations";
+	import { countElements, findImbalance, isBalanced, randomEquation } from "./ChemicalEquations";
 	import type { Molecule } from "./ChemicalEquations"
+	import { toString as toStringMap } from "./MapLib";
+import { subscribe } from "svelte/internal";
 	export let name: string;
 
-	let h2Coefficient = 1
-	let o2Coefficient = 1
-	let h2oCoefficient = 1
+	let equation = randomEquation()
 
-	const h2: Molecule = makeElement('H', 2)
-	const o2: Molecule = makeElement('O', 2)
-	const h2o: Molecule = makeMolecule([makeElement('H', 2), makeElement('O')])
+	function replaceAtIndex<T>(array: T[], index: number, value: T): T[] {
+		let retVal = new Array<T>();
+		
+		for (let i = 0; i < array.length; i++){
+			retVal[i] = (i === index) ? value : array[i]
+		}
 
-	let elementsOfH2: Map<string, number>
-	$: elementsOfH2 = map(countElements(h2), v => v * h2Coefficient)
+		return retVal
+	}
 
-	let elementsOfO2: Map<string, number>
-	$: elementsOfO2 = map(countElements(o2), v => v * o2Coefficient)
-
-	let elementsOfH2O: Map<string, number>
-	$: elementsOfH2O = map(countElements(h2o), v => v * h2oCoefficient)
+	function toString(molecule: Molecule): string {
+		switch(molecule.kind){
+			case "Element":
+				return (molecule.subscript === 1) ? `${molecule.element}` : `${molecule.element}_${molecule.subscript}`
+			case "Compound":
+				return (molecule.subscript === 1) ? 
+				`${molecule.molecules.map(molecule => toString(molecule)).join('')}`:
+				`(${molecule.molecules.map(molecule => toString(molecule)).join('')})_${molecule.subscript}`
+		}
+	}
 </script>
 
 <main>
-	<input type="number" bind:value={h2Coefficient}>H_2 + <input type="number" bind:value={o2Coefficient}>O_2
+	<!-- reactant -->
+	{#each equation.reactants as [coefficient, molecule], index}
+		<p><input type="number" min="1" bind:value={coefficient} on:input={event => {
+			equation = {
+				reactants: replaceAtIndex(
+					equation.reactants,
+					index,
+					[
+						parseInt(event.currentTarget.value),
+						molecule
+					]
+				),
+				products: equation.products
+			}
+		}}> {toString(molecule)}</p>
+	{/each}
 	-->
-	<input type="number" bind:value={h2oCoefficient}>H_2O
-
-	<ul>
-		{#each [...elementsOfH2.entries()] as [key, value]}
-			<li>
-				{key} --> {value}
-			</li>
-		{/each}
-	</ul>
-
-	<ul>
-		{#each [...elementsOfO2.entries()] as [key, value]}
-			<li>
-				{key} --> {value}
-			</li>
-		{/each}
-	</ul>
-
-	<ul>
-		{#each [...elementsOfH2O.entries()] as [key, value]}
-			<li>
-				{key} --> {value}
-			</li>
-		{/each}
-	</ul>
-
-
-	<button on:click={() => {
-		console.log(map(countElements(h2), v => v * h2Coefficient))
-		console.log(map(countElements(o2), v => v * o2Coefficient))
-		console.log(map(countElements(h2o), v => v * h2oCoefficient))
-	}}>Brett</button> 
+	<!-- product -->
+	{#each equation.products as [coefficient, molecule], index}
+		<p><input type="number" min="1" bind:value={coefficient} on:input={event => {
+			equation = {
+				products: replaceAtIndex(
+					equation.products,
+					index,
+					[
+						parseInt(event.currentTarget.value),
+						molecule
+					]
+				),
+				reactants: equation.reactants
+			}
+		}}> {toString(molecule)}</p>
+	{/each}
 
 	<p>
-		Is balanced: {isBalanced({
-			reactants: [[h2Coefficient, h2], [o2Coefficient, o2]],
-			products:  [[h2oCoefficient, h2o]],
-		  })}
+		{toStringMap(findImbalance(equation))}
+	</p>
+	<p>
+		Is balanced: {isBalanced(equation)}
 	</p>
 
 	<h1>Hello {name}!</h1>
