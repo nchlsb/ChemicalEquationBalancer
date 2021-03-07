@@ -27,13 +27,30 @@ export function makeElement(element: string, subscript = 1): Molecule {
 }
 
 // O2
-let oxygen: Molecule = makeElement('O', 2)
+const oxygen: Molecule = makeElement('O', 2)
 
-let water: Molecule = makeCompound([makeElement('H', 2), makeElement('O')])
+const water: Molecule = makeCompound([makeElement('H', 2), makeElement('O')])
+
+function H_2O(): Molecule {
+    return makeCompound([makeElement('H', 2), makeElement('O')])
+}
 
 type Equation = {
     reactants: [number, Molecule][]
     products: [number, Molecule][]
+}
+
+// ? H_2 + ? O_2 -->  ? H_2O
+// 1 H_2 + 1 O_2 ---> 1 H_2O
+// ...
+// 2 H_2 + 1 O_2 --> 2 H_2O
+
+export function equationWithCoefficient1(reactants: Molecule[], products: Molecule[]): Equation {
+    return {
+        // [number, Molecule][] = Molecule[]    <====> [number, Molecule] = Molecule
+        reactants: reactants.map(reactant => [1, reactant]),
+        products: products.map(product => [1, product])
+    }
 }
 
 export function isBalanced(equation: Equation): boolean {
@@ -96,7 +113,7 @@ export const examples: Equation[] = [
 
     equationWithCoefficient1([
         makeCompound([
-        makeElement('H', 2),
+            makeElement('H', 2),
             makeElement('S'),
             makeElement('O', 4)
         ]),
