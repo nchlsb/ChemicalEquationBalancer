@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { countElements, findImbalance, isBalanced, randomEquation } from "./ChemicalEquations";
-	import type { Molecule } from "./ChemicalEquations"
+	import { countElements, categorize, isBalanced, randomEquation, toTex } from "./ChemicalEquations";
+	import type { Molecule, Categories } from "./ChemicalEquations"
 	import { toString as toStringMap } from "./MapLib";
-import { subscribe } from "svelte/internal";
+	import { subscribe } from "svelte/internal";
+	import Katex from "./Katex.svelte"
 	export let name: string;
 
 	let equation = randomEquation()
@@ -17,22 +18,18 @@ import { subscribe } from "svelte/internal";
 		return retVal
 	}
 
-	function toString(molecule: Molecule): string {
-		switch(molecule.kind){
-			case "Element":
-				return (molecule.subscript === 1) ? `${molecule.element}` : `${molecule.element}_${molecule.subscript}`
-			case "Compound":
-				return (molecule.subscript === 1) ? 
-				`${molecule.molecules.map(molecule => toString(molecule)).join('')}`:
-				`(${molecule.molecules.map(molecule => toString(molecule)).join('')})_${molecule.subscript}`
-		}
-	}
+	let categories: Categories
+	$: categories = categorize(equation)
+
 </script>
 
 <main>
 	<!-- reactant -->
 	{#each equation.reactants as [coefficient, molecule], index}
-		<p><input type="number" min="1" bind:value={coefficient} on:input={event => {
+		{#if index !== 0}
+			<Katex math="+" />
+		{/if}
+		<input type="number" min="1" bind:value={coefficient} on:input={event => {
 			equation = {
 				reactants: replaceAtIndex(
 					equation.reactants,
@@ -44,12 +41,17 @@ import { subscribe } from "svelte/internal";
 				),
 				products: equation.products
 			}
-		}}> {toString(molecule)}</p>
+		}}>
+		
+		<Katex math={toTex(molecule)} />
 	{/each}
-	-->
+	<Katex math={"\\rightarrow"} />
 	<!-- product -->
 	{#each equation.products as [coefficient, molecule], index}
-		<p><input type="number" min="1" bind:value={coefficient} on:input={event => {
+		{#if index !== 0}
+			<Katex math="+" />
+		{/if}
+		<input type="number" min="1" bind:value={coefficient} on:input={event => {
 			equation = {
 				products: replaceAtIndex(
 					equation.products,
@@ -61,12 +63,15 @@ import { subscribe } from "svelte/internal";
 				),
 				reactants: equation.reactants
 			}
-		}}> {toString(molecule)}</p>
+		}}> <Katex math={toTex(molecule)} />
 	{/each}
 
-	<p>
-		{toStringMap(findImbalance(equation))}
-	</p>
+	<ul>
+		<li>Has in products: {toStringMap(categories.productsHave)}</li>
+		<li>Has in reactants: {toStringMap(categories.reactantsHave)} </li>
+		<li>Owed in products: {toStringMap(categories.productsOwe)} </li>
+		<li>Owed in reactants: {toStringMap(categories.reactantsOwe)} </li>
+	</ul>
 	<p>
 		Is balanced: {isBalanced(equation)}
 	</p>
@@ -74,7 +79,7 @@ import { subscribe } from "svelte/internal";
 	<h1>Hello {name}!</h1>
 	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
 </main>
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <style>
 	main {
 		text-align: center;
@@ -94,5 +99,9 @@ import { subscribe } from "svelte/internal";
 		main {
 			max-width: none;
 		}
+	}
+
+	input[type="number"] {
+		width: 50px;
 	}
 </style>

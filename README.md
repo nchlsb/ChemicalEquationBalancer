@@ -7,6 +7,7 @@
     - [ ] Let the appropriate number of graphical molecules automatically appear
 - [x] Keep track of the total number of elements on each side
 - [x] Keep track of what imbalanced elements need to be compensated for (i.e. "You need to have 4 more hydrogen in the result for the equation to balance.")
+    - [ ] Show this graphically (see paint picture)
 - [x] Change "List" to a better name in the Molecule type
 - [ ] Find balancing equation examples
     - [ ] Make a list of equations (H_2 O_2 -> H_2O) (Fe_6 ?? )

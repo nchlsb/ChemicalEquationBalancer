@@ -1,4 +1,4 @@
-export function mapEquals(a: Map<string, number>, b: Map<string, number>): boolean {
+export function mapEquals<A, B>(a: Map<A, B>, b: Map<A, B>): boolean {
     return isSubset(a, b) && isSubset(b, a)
 }
 
@@ -52,7 +52,7 @@ export function merge(maps: Map<string, number>[]): Map<string, number> {
 
 // a = {'brett': 20, 'nick': 30}
 // b = {'brett': 20, 'nick': 30, 'cal': 40}
-function isSubset(a: Map<string, number>, b: Map<string, number>): boolean {
+function isSubset<A, B>(a: Map<A, B>, b: Map<A, B>): boolean {
     for (let key of a.keys()) {
         if (!b.has(key) || a.get(key) !== b.get(key))
             return false

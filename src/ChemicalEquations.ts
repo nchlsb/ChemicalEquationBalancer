@@ -10,7 +10,7 @@ export type Molecule = {
     subscript: number
 }
 
-export function makeCompound(molecules: Molecule[], subscript = 1): Molecule {
+export function compound(molecules: Molecule[], subscript = 1): Molecule {
     return {
         kind: 'Compound',
         molecules,
@@ -18,7 +18,7 @@ export function makeCompound(molecules: Molecule[], subscript = 1): Molecule {
     }
 }
 
-export function makeElement(element: string, subscript = 1): Molecule {
+export function element(element: string, subscript = 1): Molecule {
     return {
         kind: 'Element',
         element,
@@ -27,12 +27,12 @@ export function makeElement(element: string, subscript = 1): Molecule {
 }
 
 // O2
-const oxygen: Molecule = makeElement('O', 2)
+const oxygen: Molecule = element('O', 2)
 
-const water: Molecule = makeCompound([makeElement('H', 2), makeElement('O')])
+const water: Molecule = compound([element('H', 2), element('O')])
 
 function H_2O(): Molecule {
-    return makeCompound([makeElement('H', 2), makeElement('O')])
+    return compound([element('H', 2), element('O')])
 }
 
 type Equation = {
@@ -54,7 +54,8 @@ export function equationWithCoefficient1(reactants: Molecule[], products: Molecu
 }
 
 export function isBalanced(equation: Equation): boolean {
-    return findImbalance(equation).size === 0
+    const categories = categorize(equation)
+    return categories.productsOwe.size === 0 && categories.reactantsOwe.size === 0
 }
 
 // map (on Array) :::: map :: (a -> b) -> (List)<a>   -> (List)<b>
@@ -77,54 +78,64 @@ export function countElements(molecule: Molecule, coefficient = 1): Map<string, 
     }
 }
 
-// Map Law !!
-// map(map(xs, f), g) === map(xs, g . f)
-// xs.map(f).map(g) === xs.map(x => g(f(x)))
-export function findImbalance(equation: Equation): Map<string, number> {
+
+export type Categories = {
+    reactantsOwe: Map<string, number>
+    reactantsHave: Map<string, number>
+    productsOwe: Map<string, number>
+    productsHave: Map<string, number>
+}
+
+export function categorize(equation: Equation): Categories {
     const reactantsCount = merge(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
     const productsCount = merge(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
 
-    return filter(difference(reactantsCount, productsCount), elementCount => elementCount !== 0)
+    return {
+        reactantsHave: reactantsCount,
+        productsHave: productsCount,
+        productsOwe: filter(difference(reactantsCount, productsCount), x => x > 0),
+        reactantsOwe: filter(difference(productsCount, reactantsCount), x => x > 0)
+    }
 }
 
 
 export const examples: Equation[] = [
     equationWithCoefficient1([
-        makeElement('H', 2),
-        makeElement('O', 2)
+        element('H', 2),
+        element('O', 2)
     ], [
         H_2O()
     ]),
 
     equationWithCoefficient1([
-        makeCompound([
-            makeElement('C'),
-            makeElement('O', 2)
+        compound([
+            element('C'),
+            element('O', 2)
         ]),
         H_2O()
     ], [
-        makeCompound([
-            makeElement('C', 6),
-            makeElement('H', 12),
-            makeElement('O', 6)
+        compound([
+            element('C', 6),
+            element('H', 12),
+            element('O', 6)
         ]),
-        makeElement('O', 2)
+        element('O', 2)
     ]),
 
     equationWithCoefficient1([
-        makeCompound([
-            makeElement('H', 2),
-            makeElement('S'),
-            makeElement('O', 4)
+        compound([
+            element('H', 2),
+            element('S'),
+            element('O', 4)
         ]),
     
-        makeCompound([
-            makeElement('H'),
-            makeElement('I')
+        compound([
+            element('H'),
+            element('I')
         ])
     ], [
-        makeCompound([makeElement('H', 2), makeElement('S')]),
-        makeElement('I', 2),
+        compound([element('H', 2), element('S')]),
+        element('I', 2),
         H_2O()
     ])
 ]
@@ -150,3 +161,18 @@ function randomIntegerUpTo(max: number): number {
 // Al2(SO4)3 + Ca(OH)2 → Al(OH)3 + CaSO4
 // H2SO4 + HI → H2S + I2 + H2O
 
+
+export function toTex(molecule: Molecule): string {
+    return `\\mathrm{${toString(molecule)}}`
+}
+
+export function toString(molecule: Molecule): string {
+    switch(molecule.kind){
+        case "Element":
+            return (molecule.subscript === 1) ? `${molecule.element}` : `${molecule.element}_{${molecule.subscript}}`
+        case "Compound":
+            return (molecule.subscript === 1) ? 
+            `${molecule.molecules.map(molecule => toString(molecule)).join('')}`:
+            `(${molecule.molecules.map(molecule => toString(molecule)).join('')})_{${molecule.subscript}}`
+    }
+}
