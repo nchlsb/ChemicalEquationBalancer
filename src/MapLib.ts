@@ -38,9 +38,9 @@ export function toString(map: Map<string, number>): string {
     return `{ ${[...map.entries()].map(([k, v]) => `${k}: ${v}`).join(', ')} }`
 }
 
-
-export function merge(maps: Map<string, number>[]): Map<string, number> {
-    let retVal = new Map<string, number>();
+// plus versus sum
+export function merge<K>(maps: Map<K, number>[]): Map<K, number> {
+    let retVal = new Map<K, number>();
     maps.forEach(map => {
         map.forEach((value, key) => {
             retVal.set(key, value + (retVal.get(key) || 0))
@@ -48,6 +48,20 @@ export function merge(maps: Map<string, number>[]): Map<string, number> {
     })
 
     return retVal
+}
+
+export function intersection<K>(a: Map<K, number>, b: Map<K, number>): Map<K, number> {
+    const allKeys = new Set([...a.keys(), ...b.keys()])
+
+    let map = new Map<K, number>();
+
+    for (let key of allKeys.values()) {
+        if (a.has(key) && b.has(key)) {
+            map.set(key, Math.min(a.get(key), b.get(key)))
+        }
+    }
+
+    return map//filter(map, v => v !== 0)
 }
 
 // a = {'brett': 20, 'nick': 30}

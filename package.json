@@ -6,7 +6,7 @@
     "dev": "rollup -c -w",
     "start": "sirv public",
     "validate": "svelte-check",
-    "updateDocs": "rm -r ./docs/* && cp -r ./public/* ./docs/",
+    "updateDocs": "npm run build && rm -r ./docs/* && cp -r ./public/* ./docs/",
     "test": "mocha -r ts-node/register tests/**/*.spec.ts || true"
   },
   "devDependencies": {

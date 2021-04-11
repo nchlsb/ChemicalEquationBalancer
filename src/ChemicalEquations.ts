@@ -1,4 +1,4 @@
-import { difference, filter, map, merge } from './MapLib'
+import { difference, filter, intersection, map, merge } from './MapLib'
 
 export type Molecule = {
     kind: 'Compound'
@@ -55,7 +55,7 @@ export function equationWithCoefficient1(reactants: Molecule[], products: Molecu
 
 export function isBalanced(equation: Equation): boolean {
     const categories = categorize(equation)
-    return categories.productsOwe.size === 0 && categories.reactantsOwe.size === 0
+    return categories.owedInReactants.size === 0 && categories.owedInProducts.size === 0
 }
 
 // map (on Array) :::: map :: (a -> b) -> (List)<a>   -> (List)<b>
@@ -78,26 +78,28 @@ export function countElements(molecule: Molecule, coefficient = 1): Map<string, 
     }
 }
 
-
 export type Categories = {
-    reactantsOwe: Map<string, number>
-    reactantsHave: Map<string, number>
-    productsOwe: Map<string, number>
-    productsHave: Map<string, number>
+    inBoth: Map<string, number>
+    owedInReactants: Map<string, number>
+    owedInProducts: Map<string, number>
 }
 
 export function categorize(equation: Equation): Categories {
-    const reactantsCount = merge(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
-    const productsCount = merge(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
+    const reactants = merge(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
+    const products = merge(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
+
+    const positivesOnly = <K>(map: Map<K, number>) => filter(map, x => x > 0)
 
     return {
-        reactantsHave: reactantsCount,
-        productsHave: productsCount,
-        productsOwe: filter(difference(reactantsCount, productsCount), x => x > 0),
-        reactantsOwe: filter(difference(productsCount, reactantsCount), x => x > 0)
+        inBoth: positivesOnly(intersection(reactants, products)),
+        owedInProducts: positivesOnly(difference(reactants, products)),
+        owedInReactants: positivesOnly(difference(products, reactants))
     }
 }
 
+
+// 4-tuple (Bool, Bool, Bool, Bool) = 2^4 = 16 
+// 3-tuple (Bool, Bool, Bool) = 2^3 =      8 !== 16 (Int -> (Infinite in 2 directions)) (Natural number -> (Infinite in 1 direction)) string.charAt(Natural)
 
 export const examples: Equation[] = [
     equationWithCoefficient1([

@@ -67,10 +67,9 @@
 	{/each}
 
 	<ul>
-		<li>Has in products: {toStringMap(categories.productsHave)}</li>
-		<li>Has in reactants: {toStringMap(categories.reactantsHave)} </li>
-		<li>Owed in products: {toStringMap(categories.productsOwe)} </li>
-		<li>Owed in reactants: {toStringMap(categories.reactantsOwe)} </li>
+		<li>Owed in products: {toStringMap(categories.owedInProducts)}</li>
+		<li>Owed in reactants: {toStringMap(categories.owedInReactants)} </li>
+		<li>In Both: {toStringMap(categories.inBoth)} </li>
 	</ul>
 	<p>
 		Is balanced: {isBalanced(equation)}
