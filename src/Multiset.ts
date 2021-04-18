@@ -5,14 +5,19 @@ export type Multiset<T> = {
 export function Multiset<T>(array: T[]): Multiset<T> {
     switch(array.length){
         case 0:
-            return {implementation: new Map<T, number>()}
+            return empty()
         default:
             const [first, ...rest] = array
-            return sum(
-                {implementation: new Map<T, number>([[first, 1]])},
-                Multiset(rest)
-            )
+            return sum(singleton(first), Multiset(rest))
     }
+}
+
+export function singleton<T>(element: T, amount = 1): Multiset<T> {
+    return {implementation: new Map<T, number>([[element, amount]])}
+}
+
+export function empty<T>(): Multiset<T> {
+    return {implementation: new Map<T, number>()}
 }
 
 export function isSubset<T>(a: Multiset<T>, b: Multiset<T>): boolean {
@@ -40,6 +45,23 @@ export function sum<T>(a: Multiset<T>, b: Multiset<T>) {
         implementation: new Map(universe(a, b).map(x =>
             [x, count(a, x) + count(b, x)]
         ))
+    }
+}
+
+export function sumAll<T>(array: Multiset<T>[]): Multiset<T> {
+    switch (array.length) {
+        case 0: 
+            return empty()
+        default:
+            const [first, ...rest] = array
+            return sum(first, sumAll(rest))
+    }
+}
+
+export function multiplyCounts<T>(n: number, multiset: Multiset<T>): Multiset<T> {
+    return {
+        implementation: new Map<T, number>([...multiset.implementation.entries()]
+            .map(([k, v]) => [k, v * n]))
     }
 }
 

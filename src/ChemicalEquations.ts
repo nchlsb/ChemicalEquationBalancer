@@ -1,4 +1,5 @@
 import { difference, filter, intersection, map, merge } from './MapLib'
+import { multiplyCounts, Multiset, singleton, sumAll } from './Multiset'
 
 export type Molecule = {
     kind: 'Compound'
@@ -67,14 +68,27 @@ export function isBalanced(equation: Equation): boolean {
 // H: 4
 // O: 2
 export function countElements(molecule: Molecule, coefficient = 1): Map<string, number> {
+    // switch(molecule.kind) {
+    //     case "Element":
+    //         return map(new Map([[molecule.element, molecule.subscript]]), v => v * coefficient)
+    //     case "Compound":
+    //         return map(
+    //             merge(molecule.molecules.map(innerMolecule => countElements(innerMolecule))),
+    //             v => v * molecule.subscript * coefficient
+    //         );
+    // }
+
+    return countElements2(molecule, coefficient).implementation
+}
+
+export function countElements2(molecule: Molecule, coefficient = 1): Multiset<string> {
     switch(molecule.kind) {
         case "Element":
-            return map(new Map([[molecule.element, molecule.subscript]]), v => v * coefficient)
+            return singleton(molecule.element, molecule.subscript * coefficient)
+            
         case "Compound":
-            return map(
-                merge(molecule.molecules.map(innerMolecule => countElements(innerMolecule))),
-                v => v * molecule.subscript * coefficient
-            );
+            return multiplyCounts(molecule.subscript * coefficient,
+                sumAll(molecule.molecules.map(x => countElements2(x))))
     }
 }
 
