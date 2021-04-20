@@ -78,7 +78,7 @@ export function countElements(molecule: Molecule, coefficient = 1): Map<string, 
     //         );
     // }
 
-    return countElements2(molecule, coefficient).implementation
+    return countElements2(molecule, coefficient).elements
 }
 
 export function countElements2(molecule: Molecule, coefficient = 1): Multiset<string> {
