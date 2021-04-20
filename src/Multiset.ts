@@ -1,5 +1,5 @@
 export type Multiset<T> = {
-    implementation: Map<T, number>
+    elements: Map<T, number>
 }
 
 export function Multiset<T>(array: T[]): Multiset<T> {
@@ -13,11 +13,11 @@ export function Multiset<T>(array: T[]): Multiset<T> {
 }
 
 export function singleton<T>(element: T, amount = 1): Multiset<T> {
-    return {implementation: new Map<T, number>([[element, amount]])}
+    return {elements: new Map<T, number>([[element, amount]])}
 }
 
 export function empty<T>(): Multiset<T> {
-    return {implementation: new Map<T, number>()}
+    return {elements: new Map<T, number>()}
 }
 
 export function isSubset<T>(a: Multiset<T>, b: Multiset<T>): boolean {
@@ -26,7 +26,7 @@ export function isSubset<T>(a: Multiset<T>, b: Multiset<T>): boolean {
 
 export function intersection<T>(a: Multiset<T>, b: Multiset<T>): Multiset<T> {
     return {
-        implementation: new Map(universe(a, b).map(x =>
+        elements: new Map(universe(a, b).map(x =>
             [x, Math.min(count(a, x), count(b, x))]
         ))
     }
@@ -34,7 +34,7 @@ export function intersection<T>(a: Multiset<T>, b: Multiset<T>): Multiset<T> {
 
 export function union<T>(a: Multiset<T>, b: Multiset<T>): Multiset<T> {
     return {
-        implementation: new Map(universe(a, b).map(x =>
+        elements: new Map(universe(a, b).map(x =>
             [x, Math.max(count(a, x), count(b, x))]
         ))
     }
@@ -42,7 +42,7 @@ export function union<T>(a: Multiset<T>, b: Multiset<T>): Multiset<T> {
 
 export function sum<T>(a: Multiset<T>, b: Multiset<T>) {
     return {
-        implementation: new Map(universe(a, b).map(x =>
+        elements: new Map(universe(a, b).map(x =>
             [x, count(a, x) + count(b, x)]
         ))
     }
@@ -60,19 +60,19 @@ export function sumAll<T>(array: Multiset<T>[]): Multiset<T> {
 
 export function multiplyCounts<T>(n: number, multiset: Multiset<T>): Multiset<T> {
     return {
-        implementation: new Map<T, number>([...multiset.implementation.entries()]
+        elements: new Map<T, number>([...multiset.elements.entries()]
             .map(([k, v]) => [k, v * n]))
     }
 }
 
 export function count<T>(multiset: Multiset<T>, element: T): number {
-    return multiset.implementation.has(element) ? multiset.implementation.get(element) : 0
+    return multiset.elements.has(element) ? multiset.elements.get(element) : 0
 }
 
 function universe<T>(a: Multiset<T>, b: Multiset<T>): T[] {
     return [...new Set([
-        ...a.implementation.keys(),
-        ...b.implementation.keys()
+        ...a.elements.keys(),
+        ...b.elements.keys()
     ]).values()]
 }
 
