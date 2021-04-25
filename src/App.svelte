@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { countElements, categorize, isBalanced, randomEquation, toTex } from "./ChemicalEquations";
-	import type { Molecule, Categories } from "./ChemicalEquations"
+	import { countElements, categorize2, isBalanced, randomEquation, toTex } from "./ChemicalEquations";
+	import type { Molecule, Categories2 } from "./ChemicalEquations"
 	import { toString as toStringMap } from "./MapLib";
 	import { subscribe } from "svelte/internal";
+	import { toStringMultiset } from "./Multiset"
 	import Katex from "./Katex.svelte"
 	export let name: string;
 
@@ -18,8 +19,8 @@
 		return retVal
 	}
 
-	let categories: Categories
-	$: categories = categorize(equation)
+	let categories: Categories2
+	$: categories = categorize2(equation)
 
 </script>
 
@@ -67,9 +68,9 @@
 	{/each}
 
 	<ul>
-		<li>Owed in products: {toStringMap(categories.owedInProducts)}</li>
-		<li>Owed in reactants: {toStringMap(categories.owedInReactants)} </li>
-		<li>In Both: {toStringMap(categories.inBoth)} </li>
+		<li>Owed in products: {toStringMultiset(categories.owedInProducts)}</li>
+		<li>Owed in reactants: {toStringMultiset(categories.owedInReactants)} </li>
+		<li>In Both: {toStringMultiset(categories.inBoth)} </li>
 	</ul>
 	<p>
 		Is balanced: {isBalanced(equation)}

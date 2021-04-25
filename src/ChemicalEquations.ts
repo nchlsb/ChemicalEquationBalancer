@@ -1,5 +1,5 @@
 import { difference, filter, intersection, map, merge } from './MapLib'
-import { multiplyCounts, Multiset, singleton, sumAll } from './Multiset'
+import { multiplyCounts, Multiset, singleton, sumAll, intersection as intersection2, difference as difference2} from './Multiset'
 
 export type Molecule = {
     kind: 'Compound'
@@ -98,6 +98,12 @@ export type Categories = {
     owedInProducts: Map<string, number>
 }
 
+export type Categories2 = {
+    inBoth: Multiset<string>
+    owedInReactants: Multiset<string>
+    owedInProducts: Multiset<string>
+}
+
 export function categorize(equation: Equation): Categories {
     const reactants = merge(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
     const products = merge(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
@@ -108,6 +114,19 @@ export function categorize(equation: Equation): Categories {
         inBoth: positivesOnly(intersection(reactants, products)),
         owedInProducts: positivesOnly(difference(reactants, products)),
         owedInReactants: positivesOnly(difference(products, reactants))
+    }
+}
+
+export function categorize2(equation: Equation): Categories2 {
+    const reactants = sumAll(equation.reactants.map(([coefficient, molecule]) => countElements2(molecule, coefficient)))
+    const products = sumAll(equation.products.map(([coefficient, molecule]) => countElements2(molecule, coefficient)))
+
+    //const positivesOnly = <K>(map: Map<K, number>) => filter(map, x => x > 0)
+
+    return {
+        inBoth: intersection2(reactants, products),
+        owedInProducts: difference2(reactants, products),
+        owedInReactants: difference2(products, reactants)
     }
 }
 

@@ -58,6 +58,13 @@ export function sumAll<T>(array: Multiset<T>[]): Multiset<T> {
     }
 }
 
+export function difference<T>(a: Multiset<T>, b: Multiset<T>) {
+    const UnivrseA = universe(a, b).map(x =>[x, count(a, x) - count(b, x)] as [T,number])
+    return {
+        elements: new Map(UnivrseA.filter(([a,b]) => b > 0))
+    }
+}
+
 export function multiplyCounts<T>(n: number, multiset: Multiset<T>): Multiset<T> {
     return {
         elements: new Map<T, number>([...multiset.elements.entries()]
@@ -74,6 +81,10 @@ function universe<T>(a: Multiset<T>, b: Multiset<T>): T[] {
         ...a.elements.keys(),
         ...b.elements.keys()
     ]).values()]
+}
+
+export function toStringMultiset<T>(multiset: Multiset<T>){
+    return `{ ${[...multiset.elements.entries()].map(([k, v]) => `${k}: ${v}`).join(', ')} }`
 }
 
 /*
