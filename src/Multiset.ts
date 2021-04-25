@@ -76,6 +76,10 @@ export function count<T>(multiset: Multiset<T>, element: T): number {
     return multiset.elements.has(element) ? multiset.elements.get(element) : 0
 }
 
+export function isEmpty<T>(multiset: Multiset<T>){
+    return multiset.elements.size === 0;
+}
+
 function universe<T>(a: Multiset<T>, b: Multiset<T>): T[] {
     return [...new Set([
         ...a.elements.keys(),

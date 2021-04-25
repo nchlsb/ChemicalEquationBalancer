@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { countElements, categorize2, isBalanced, randomEquation, toTex } from "./ChemicalEquations";
-	import type { Molecule, Categories2 } from "./ChemicalEquations"
-	import { toString as toStringMap } from "./MapLib";
-	import { subscribe } from "svelte/internal";
+	import type { Categories } from "./ChemicalEquations"; 
+	import { categorize, isBalanced, randomEquation, toTex } from "./ChemicalEquations";
 	import { toStringMultiset } from "./Multiset"
 	import Katex from "./Katex.svelte"
 	export let name: string;
@@ -19,8 +17,8 @@
 		return retVal
 	}
 
-	let categories: Categories2
-	$: categories = categorize2(equation)
+	let categories: Categories
+	$: categories = categorize(equation)
 
 </script>
 
