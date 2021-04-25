@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Categories } from "./ChemicalEquations"; 
-	import { categorize, isBalanced, randomEquation, toTex } from "./ChemicalEquations";
-	import { toStringMultiset } from "./Multiset"
+	import { countElements } from "./ChemicalEquations"; 
+	import { randomEquation, toTex } from "./ChemicalEquations";
+	import { difference, intersection, isEmpty, Multiset, sumAll, toStringMultiset } from "./Multiset"
 	import Katex from "./Katex.svelte"
 	export let name: string;
 
@@ -17,8 +17,23 @@
 		return retVal
 	}
 
-	let categories: Categories
-	$: categories = categorize(equation)
+	let reactants: Multiset<string>
+	$: reactants = sumAll(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
+
+	let products: Multiset<string>
+	$: products = sumAll(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
+
+	let inBoth: Multiset<string>
+	$: inBoth = intersection(reactants, products)
+
+	let owedInProducts: Multiset<string>
+	$: owedInProducts = difference(reactants, products)
+    
+	let owedInReactants: Multiset<string>
+	$: owedInReactants = difference(products, reactants)
+
+	let equationIsBalanced: boolean
+	$: equationIsBalanced = isEmpty(owedInReactants) && isEmpty(owedInProducts)
 
 </script>
 
@@ -66,12 +81,12 @@
 	{/each}
 
 	<ul>
-		<li>Owed in products: {toStringMultiset(categories.owedInProducts)}</li>
-		<li>Owed in reactants: {toStringMultiset(categories.owedInReactants)} </li>
-		<li>In Both: {toStringMultiset(categories.inBoth)} </li>
+		<li>Owed in products: {toStringMultiset(owedInProducts)}</li>
+		<li>Owed in reactants: {toStringMultiset(owedInReactants)} </li>
+		<li>In Both: {toStringMultiset(inBoth)} </li>
 	</ul>
 	<p>
-		Is balanced: {isBalanced(equation)}
+		Is balanced: {equationIsBalanced}
 	</p>
 
 	<h1>Hello {name}!</h1>

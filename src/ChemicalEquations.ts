@@ -53,10 +53,10 @@ export function equationWithCoefficient1(reactants: Molecule[], products: Molecu
     }
 }
 
-export function isBalanced(equation: Equation): boolean {
-    const categories = categorize(equation)
-    return isEmpty(categories.owedInReactants) && isEmpty(categories.owedInProducts)
-}
+// export function isBalanced(equation: Equation): boolean {
+//     const categories = categorize(equation)
+//     return isEmpty(categories.owedInReactants) && isEmpty(categories.owedInProducts)
+// }
 
 // map (on Array) :::: map :: (a -> b) -> (List)<a>   -> (List)<b>
 // map (on Map<K, V>)  map :: (a -> b) -> (Map<K>)<a> -> (Map<K>)<b>
@@ -76,26 +76,6 @@ export function countElements(molecule: Molecule, coefficient = 1): Multiset<str
                 sumAll(molecule.molecules.map(x => countElements(x))))
     }
 }
-
-export type Categories = {
-    inBoth: Multiset<string>
-    owedInReactants: Multiset<string>
-    owedInProducts: Multiset<string>
-}
-
-export function categorize(equation: Equation): Categories {
-    const reactants = sumAll(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
-    const products = sumAll(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
-
-    //const positivesOnly = <K>(map: Map<K, number>) => filter(map, x => x > 0)
-
-    return {
-        inBoth: intersection(reactants, products),
-        owedInProducts: difference(reactants, products),
-        owedInReactants: difference(products, reactants)
-    }
-}
-
 
 // 4-tuple (Bool, Bool, Bool, Bool) = 2^4 = 16 
 // 3-tuple (Bool, Bool, Bool) = 2^3 =      8 !== 16 (Int -> (Infinite in 2 directions)) (Natural number -> (Infinite in 1 direction)) string.charAt(Natural)
