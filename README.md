@@ -13,4 +13,5 @@
     - [ ] Make a list of equations (H_2 O_2 -> H_2O) (Fe_6 ?? )
     - [ ] Make the game loop where you pull a random equation, the student balances it, then plays again ("New Equation")
     - [ ] Don't "Play Again" and get the same equation twice
+    - [ ] Catagorize into easy and hard
 - [ ] Graphically represent imbalances better

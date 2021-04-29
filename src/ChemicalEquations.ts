@@ -1,4 +1,6 @@
+import type { ChemicalElement } from "./ChemicalElements"
 import { multiplyCounts, Multiset, singleton, sumAll, intersection, difference, isEmpty} from './Multiset'
+
 
 export type Molecule = {
     kind: 'Compound'
@@ -6,7 +8,7 @@ export type Molecule = {
     subscript: number
 } | {
     kind: 'Element'
-    element: string
+    element: ChemicalElement
     subscript: number
 }
 
@@ -18,7 +20,7 @@ export function compound(molecules: Molecule[], subscript = 1): Molecule {
     }
 }
 
-export function element(element: string, subscript = 1): Molecule {
+export function element(element: ChemicalElement, subscript = 1): Molecule {
     return {
         kind: 'Element',
         element,
@@ -118,6 +120,47 @@ export const examples: Equation[] = [
         compound([element('H', 2), element('S')]),
         element('I', 2),
         H_2O()
+    ]),
+
+    equationWithCoefficient1([
+        compound([
+            element('S', 2),
+            element('S'),
+            element('O', 4)
+        ]),
+    
+        compound([
+            element('H'),
+            element('I')
+        ])
+    ], [
+        compound([element('H', 2), element('S')]),
+        element('I', 2),
+        H_2O()
+    ]),
+
+    equationWithCoefficient1([
+        compound([
+            element('S', 2),
+            element('S'),
+            element('O', 4)
+        ]),
+    
+        compound([
+            element('H'),
+            element('I')
+        ])
+    ], [
+        compound([element('H', 2), element('S')]),
+        element('I', 2),
+        H_2O()
+    ]),
+
+    equationWithCoefficient1([
+        element('S', 8),
+        element('F', 2),
+    ], [
+        compound([element('S'), element('F', 6)])
     ])
 ]
 

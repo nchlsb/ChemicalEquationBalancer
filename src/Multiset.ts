@@ -40,7 +40,7 @@ export function union<T>(a: Multiset<T>, b: Multiset<T>): Multiset<T> {
     }
 }
 
-export function sum<T>(a: Multiset<T>, b: Multiset<T>) {
+export function sum<T>(a: Multiset<T>, b: Multiset<T>): Multiset<T> {
     return {
         elements: new Map(universe(a, b).map(x =>
             [x, count(a, x) + count(b, x)]
