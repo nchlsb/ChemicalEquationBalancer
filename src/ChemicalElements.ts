@@ -1,4 +1,19 @@
 export type ChemicalElement = 
+    "Ac" |
+    "Al" |
+    "Am" |
+    "Sb" |
+    "Ar" |
+    "As" |
+    "At" |
+    "Ba" |
+    "Bk" |
+    "Be" |
+    "Bi" |
+    "Bh" |
+    "B"  |
+    "Br" |
+    "Cd" |
     "Ca" |
     "Cf" |
     "C"  |
