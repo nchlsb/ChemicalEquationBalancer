@@ -161,6 +161,16 @@ export const examples: Equation[] = [
         element('F', 2),
     ], [
         compound([element('S'), element('F', 6)])
+    ]), 
+
+    equationWithCoefficient1([
+        element('Al', 2),
+        compound([element('C'), element('O', 3)], 3),
+        compound([element('H', 3), element('P'), element('P'), element('O', 4)])
+    ], [
+        compound([element('Al'), element('P'), element('O', 4)]),
+        compound([element('C'), element('O', 2)]),
+        H_2O()
     ])
 ]
 
