@@ -1,4 +1,5 @@
 import type { ChemicalElement } from "./ChemicalElements"
+import { randomIntegerUpTo } from "./helpers"
 import { multiplyCounts, Multiset, singleton, sumAll, intersection, difference, isEmpty} from './Multiset'
 
 
@@ -178,11 +179,7 @@ export function randomEquation(): Equation {
     return examples[randomIntegerUpTo(examples.length)]
 }
 
-function randomIntegerUpTo(max: number): number {
-    const between0and1 = Math.random()
-    const floatBetween0andMax = between0and1 * max
-    return Math.floor(floatBetween0andMax)
-}
+
 
 // CO2 + H2O → C6H12O6 + O2
 // SiCl4 + H2O → H4SiO4 + HCl
