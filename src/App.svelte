@@ -3,6 +3,7 @@
 	import { randomEquation, toTex } from "./ChemicalEquations";
 	import { difference, intersection, isEmpty, Multiset, sumAll, toStringMultiset } from "./Multiset"
 	import Katex from "./Katex.svelte"
+	import type { ChemicalElement } from "./ChemicalElements";	
 	export let name: string;
 
 	let equation = randomEquation()
@@ -17,19 +18,19 @@
 		return retVal
 	}
 
-	let reactants: Multiset<string>
+	let reactants: Multiset<ChemicalElement>
 	$: reactants = sumAll(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
 
-	let products: Multiset<string>
+	let products: Multiset<ChemicalElement>
 	$: products = sumAll(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
 
-	let inBoth: Multiset<string>
+	let inBoth: Multiset<ChemicalElement>
 	$: inBoth = intersection(reactants, products)
 
-	let owedInProducts: Multiset<string>
+	let owedInProducts: Multiset<ChemicalElement>
 	$: owedInProducts = difference(reactants, products)
     
-	let owedInReactants: Multiset<string>
+	let owedInReactants: Multiset<ChemicalElement>
 	$: owedInReactants = difference(products, reactants)
 
 	let equationIsBalanced: boolean

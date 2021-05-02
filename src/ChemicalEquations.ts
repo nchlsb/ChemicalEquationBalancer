@@ -69,7 +69,7 @@ export function equationWithCoefficient1(reactants: Molecule[], products: Molecu
 // 2 * H20 = 2 * {H: 2, O: 1} => {H: 2 * 2, O: 1 * 2}
 // H: 4
 // O: 2
-export function countElements(molecule: Molecule, coefficient = 1): Multiset<string> {
+export function countElements(molecule: Molecule, coefficient = 1): Multiset<ChemicalElement> {
     switch(molecule.kind) {
         case "Element":
             return singleton(molecule.element, molecule.subscript * coefficient)
@@ -207,3 +207,4 @@ export function toString(molecule: Molecule): string {
             `(${molecule.molecules.map(molecule => toString(molecule)).join('')})_{${molecule.subscript}}`
     }
 }
+
