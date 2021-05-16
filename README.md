@@ -1,6 +1,6 @@
 # Todo
 - [X] Format chemical equations with KaTeX
-- [ ] Make a type for elements
+- [X] Make a type for elements
 - [ ] Change the names of the molecules if the student changes the subscript (i.e. water changes to hydrogen peroxide)
 - [ ] Pull down molecules graphically to balance the equation
 - [x] Alternatively, change the coefficient for symbolic manipulation
