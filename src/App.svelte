@@ -4,6 +4,7 @@
 	import { difference, intersection, isEmpty, Multiset, sumAll, toStringMultiset } from "./Multiset"
 	import Katex from "./Katex.svelte"
 	import type { ChemicalElement } from "./ChemicalElements";	
+import { range } from "./helpers";
 	export let name: string;
 
 	let equation = randomEquation()
@@ -80,6 +81,16 @@
 			}
 		}}> <Katex math={toTex(molecule)} />
 	{/each}
+
+	<ul>
+	{#each [...owedInProducts.elements.entries()] as [chemicalElement, n]}
+		<li>
+			{#each range(n) as _}
+				<svg width="20" height="20"><circle cx="10" cy="10" r="7" stroke="black" stroke-width="3" fill="white"><text>{chemicalElement}</text></circle></svg>
+			{/each}
+		</li>
+	{/each}
+	</ul>
 
 	<ul>
 		<li>Owed in products: {toStringMultiset(owedInProducts)}</li>
