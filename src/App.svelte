@@ -4,7 +4,7 @@
 	import { difference, intersection, isEmpty, Multiset, sumAll, toStringMultiset } from "./Multiset"
 	import Katex from "./Katex.svelte"
 	import type { ChemicalElement } from "./ChemicalElements";	
-import { range } from "./helpers";
+	import { range } from "./helpers";
 	export let name: string;
 
 	let equation = randomEquation()
@@ -37,6 +37,7 @@ import { range } from "./helpers";
 	let equationIsBalanced: boolean
 	$: equationIsBalanced = isEmpty(owedInReactants) && isEmpty(owedInProducts)
 
+	const size = 50
 </script>
 
 <main>
@@ -82,21 +83,50 @@ import { range } from "./helpers";
 		}}> <Katex math={toTex(molecule)} />
 	{/each}
 
-	<ul>
+	<ul> Owed in products:
 	{#each [...owedInProducts.elements.entries()] as [chemicalElement, n]}
 		<li>
 			{#each range(n) as _}
-				<svg width="20" height="20"><circle cx="10" cy="10" r="7" stroke="black" stroke-width="3" fill="white"><text>{chemicalElement}</text></circle></svg>
+				<svg width={size} height={size}>
+					<circle cx={size / 2} cy={size / 2} r={size / 2.5} stroke="black" stroke-dasharray="5,5" stroke-width="3" fill="white"></circle>
+					<text x={size / 2} y={(size * 5) / 8} fill="black" text-anchor="middle">{chemicalElement}</text>
+				</svg>
 			{/each}
 		</li>
 	{/each}
 	</ul>
 
-	<ul>
+	<ul> Owed in reactants:
+		{#each [...owedInReactants.elements.entries()] as [chemicalElement, n]}
+			<li>
+				{#each range(n) as _}
+					<svg width={size} height={size}>
+						<circle cx={size / 2} cy={size / 2} r={size / 2.5} stroke="black" stroke-dasharray="5,5" stroke-width="3" fill="white"></circle>
+						<text x={size / 2} y={(size * 5) / 8} fill="black" text-anchor="middle">{chemicalElement}</text>
+					</svg>
+				{/each}
+			</li>
+		{/each}
+	</ul>
+
+	<ul> In both:
+		{#each [...inBoth.elements.entries()] as [chemicalElement, n]}
+			<li>
+				{#each range(n) as _}
+					<svg width={size} height={size}>
+						<circle cx={size / 2} cy={size / 2} r={size / 2.5} stroke="black" stroke-width="3" fill="white"></circle>
+						<text x={size / 2} y={(size * 5) / 8} fill="black" text-anchor="middle">{chemicalElement}</text>
+					</svg>
+				{/each}
+			</li>
+		{/each}
+	</ul>
+
+	<!-- <ul>
 		<li>Owed in products: {toStringMultiset(owedInProducts)}</li>
 		<li>Owed in reactants: {toStringMultiset(owedInReactants)} </li>
 		<li>In Both: {toStringMultiset(inBoth)} </li>
-	</ul>
+	</ul> -->
 	<p>
 		Is balanced: {equationIsBalanced}
 	</p>
