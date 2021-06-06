@@ -38,7 +38,7 @@ function H_2O(): Molecule {
     return compound([element('H', 2), element('O')])
 }
 
-type Equation = {
+export type Equation = {
     reactants: [number, Molecule][]
     products: [number, Molecule][]
 }
@@ -78,6 +78,41 @@ export function countElements(molecule: Molecule, coefficient = 1): Multiset<Che
             return multiplyCounts(molecule.subscript * coefficient,
                 sumAll(molecule.molecules.map(x => countElements(x))))
     }
+}
+
+export type Counts = {
+    amountInReactants: number
+    amountInProducts: number
+}
+
+export function build(equation: Equation): Map<ChemicalElement, Counts> {
+	const reactants = sumAll(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient))).elements
+	const products = sumAll(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient))).elements
+
+    return combine(reactants, products)
+}
+
+function combine(reactants: Map<ChemicalElement, number>, products: Map<ChemicalElement, number>): Map<ChemicalElement, Counts> {    
+    let map = new Map<ChemicalElement, Counts>()
+
+    const allElements = [...new Set([ // unique keys
+        ...reactants.keys(),
+        ...products.keys()
+    ]).values()]
+
+
+    for (let element of allElements) {
+        map.set(element, {
+            amountInProducts: products.get(element) || 0,
+            amountInReactants: reactants.get(element) || 0
+        })
+    }
+
+    return map
+}
+
+export function isBalanced(map: Map<ChemicalElement, Counts>): boolean {
+    return [...map.values()].every(counts => counts.amountInReactants === counts.amountInProducts)
 }
 
 // 4-tuple (Bool, Bool, Bool, Bool) = 2^4 = 16 

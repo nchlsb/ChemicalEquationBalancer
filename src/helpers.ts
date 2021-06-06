@@ -1,3 +1,5 @@
+import type { Counts } from "./ChemicalEquations";
+
 export function randomIntegerUpTo(max: number): number {
     const between0and1 = Math.random()
     const floatBetween0andMax = between0and1 * max
@@ -12,4 +14,8 @@ export function range(n: number): number[] {
     }
 
     return retVal;
+}
+
+export function toStringMap<K>(map: Map<K, Counts>): string {
+    return `{ ${[...map.entries()].map(([k, v]) => `${k}: (${v.amountInReactants}, ${v.amountInProducts})`).join(', ')} }`
 }

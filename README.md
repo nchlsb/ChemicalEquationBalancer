@@ -14,4 +14,8 @@
     - [ ] Make the game loop where you pull a random equation, the student balances it, then plays again ("New Equation")
     - [ ] Don't "Play Again" and get the same equation twice
     - [ ] Catagorize into easy and hard
-- [ ] Graphically represent imbalances better
+- [x] Graphically represent imbalances better
+- [x] Implement isBalanced() (again) using the new Map type
+- [ ] Which bar is the reactants, and which is the products?
+    - [ ] (try the "Spread Wing" style)
+    - [ ] Change the color of the specific bar when it's balanced (when a       particular molecule is balanced)
