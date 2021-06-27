@@ -7,15 +7,21 @@
     - [ ] Let the appropriate number of graphical molecules automatically appear
 - [x] Keep track of the total number of elements on each side
 - [x] Keep track of what imbalanced elements need to be compensated for (i.e. "You need to have 4 more hydrogen in the result for the equation to balance.")
-    - [ ] Show this graphically (see paint picture)
+    - [x] Show this graphically (see paint picture)
 - [x] Change "List" to a better name in the Molecule type
 - [ ] Find balancing equation examples
-    - [ ] Make a list of equations (H_2 O_2 -> H_2O) (Fe_6 ?? )
+    - [x] Make a list of equations (H_2 O_2 -> H_2O) (Fe_6 ?? )
     - [ ] Make the game loop where you pull a random equation, the student balances it, then plays again ("New Equation")
     - [ ] Don't "Play Again" and get the same equation twice
     - [ ] Catagorize into easy and hard
 - [x] Graphically represent imbalances better
 - [x] Implement isBalanced() (again) using the new Map type
 - [ ] Which bar is the reactants, and which is the products?
-    - [ ] (try the "Spread Wing" style)
+    - [x] (try the "Spread Wing" style)
     - [ ] Change the color of the specific bar when it's balanced (when a       particular molecule is balanced)
+- [ ] Sort elements by atomic weight (and implement atomic weight function)
+- [ ] The "spread wing" bars are always the same length on either side. Is that redundant
+      information a problem?
+- [ ] Solve the styling issue where the --> is not in the center of the screen
+- [ ] Remove the magic number 20 / replace as a constant, or remove completely somehow (using screen percentages, i.e., the largest bar always stretches to the end of the screen)
+- [ ] Rename alignRight and alignCenter classes
