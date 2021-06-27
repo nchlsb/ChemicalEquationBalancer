@@ -51,6 +51,18 @@
 			}
 	}
 
+	let alphabeticalEntries: [ChemicalElement, Counts][]
+	$: alphabeticalEntries = [...map.entries()].sort(([a, _], [b, __]) => {
+		if (a < b) {
+			return -1
+		} else if (a === b) {
+			return 0
+		} else {
+			return 1
+		}
+	})
+
+	const BAR_HEIGHT = 20
 </script>
 
 <main>
@@ -68,9 +80,11 @@
 					<Katex math={toTex(molecule)} />
 				{/each}
 			</td>
+			<td></td>
 			<td class="alignCenter">
 				<Katex math={"\\rightarrow"} />
 			</td>
+			<td></td>
 			<td>
 				{#each equation.products as [coefficient, molecule], index}
 		
@@ -83,34 +97,41 @@
 				{/each}
 			</td>
 		</tr>
-		{#each [...map.entries()] as [element, count]}
+		{#each alphabeticalEntries as [element, counts]}
 		<tr>
 			<td class="alignRight">
 				<svg
-					height=10
-					width={count.amountInReactants * 20}
+					class="brett"
+					transform="scale(-1, 1)"
+					height={BAR_HEIGHT}
+					width={Math.max(counts.amountInProducts, counts.amountInReactants) * 20}
 				>
-					<rect class="reactants-bar" x=0 y=0 height=10 width={count.amountInReactants * 20}></rect>
+					<rect class="owed-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInProducts * 20}></rect>
+					<rect class="has-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInReactants * 20}></rect>
 				</svg>
 			</td>
+			<td class="alignRight">
+				<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
+			</td>
 			<td class="alignCenter">
-				{element}
+				<Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex>
+			</td>
+			<td>
+				<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
 			</td>
 			<td>
 				<svg
-					height=10
-					width={count.amountInProducts * 20}
+					class="brett"
+					height={BAR_HEIGHT}
+					width={Math.max(counts.amountInProducts, counts.amountInReactants) * 20}
 				>
-					<rect class="products-bar" x=0 y=0 height=10 width={count.amountInProducts * 20}></rect>
+					<rect class="owed-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInReactants * 20}></rect>
+					<rect class="has-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInProducts * 20}></rect>
 				</svg>
 			</td>
 		</tr>
 		{/each}
 	</table>
-
-	<p id="is-balanced">
-		Is balanced: {isBalanced(map)}
-	</p>
 </main>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <style>
@@ -119,10 +140,6 @@
 		padding: 1em;
 		max-width: 240px;
 		margin: 0 auto;
-	}
-
-	li {
-		list-style: none;
 	}
 
 	@media (min-width: 640px) {
@@ -135,13 +152,16 @@
 		width: 50px;
 	}
 	
-	.reactants-bar {
-		fill: red;
-		text-align: right;
+	.has-bar {
+		fill: black;
 	}
 
-	.products-bar {
-		fill: blue;
+	.owed-bar {
+		fill: white;
+	}
+
+	.brett {
+		outline: 3px solid black;
 	}
 
 	td {
