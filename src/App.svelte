@@ -51,8 +51,8 @@
 			}
 	}
 
-	let alphabeticalEntries: [ChemicalElement, Counts][]
-	$: alphabeticalEntries = [...map.entries()].sort(([a, _], [b, __]) => {
+	let orderedEntries: [ChemicalElement, Counts][]
+	$: orderedEntries = [...map.entries()].sort(([a, _], [b, __]) => {
 		if (a < b) {
 			return -1
 		} else if (a === b) {
@@ -67,7 +67,9 @@
 
 <main>
 	<table id="reactants-and-prodcuts">
+		<!-- written products and recants -->
 		<tr>
+			<!-- recants expression -->
 			<td class="alignRight">
 				{#each equation.reactants as [coefficient, molecule], index}		
 					{#if index !== 0}
@@ -80,11 +82,11 @@
 					<Katex math={toTex(molecule)} />
 				{/each}
 			</td>
-			<td></td>
-			<td class="alignCenter">
+			<!-- arrow -->
+			<td class="alignCenter" colspan="3">
 				<Katex math={"\\rightarrow"} />
 			</td>
-			<td></td>
+			<!-- prodcuts expression -->
 			<td>
 				{#each equation.products as [coefficient, molecule], index}
 		
@@ -97,8 +99,10 @@
 				{/each}
 			</td>
 		</tr>
-		{#each alphabeticalEntries as [element, counts]}
+		<!-- visualization -->
+		{#each orderedEntries as [element, counts]}
 		<tr>
+			<!-- recants bar -->
 			<td class="alignRight">
 				<svg
 					class="brett"
@@ -110,15 +114,19 @@
 					<rect class="has-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInReactants * 20}></rect>
 				</svg>
 			</td>
+			<!-- recants count -->
 			<td class="alignRight">
 				<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
 			</td>
+			<!-- element symbol -->
 			<td class="alignCenter">
 				<Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex>
 			</td>
+			<!-- products count -->
 			<td>
 				<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
 			</td>
+			<!-- products bar -->
 			<td>
 				<svg
 					class="brett"
