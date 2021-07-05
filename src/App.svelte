@@ -63,14 +63,25 @@
 	})
 
 	const BAR_HEIGHT = 20
+	type Spacing = {reactants: number, width: number, products: number}
+
+	let widths: [ChemicalElement, Counts, Spacing][]
+	$: widths = orderedEntries.map(([element, counts]) => {
+		const totalElements = counts.amountInProducts + counts.amountInReactants
+		const w = 5 // percent
+		return [element, counts, {
+			reactants: (100 - w) * counts.amountInReactants / totalElements,
+			width: w,
+			products: (100 - w) * counts.amountInProducts / totalElements
+		}]
+	})
 </script>
 
 <main>
 	<table id="reactants-and-prodcuts">
 		<!-- written products and recants -->
 		<tr>
-			<!-- recants expression -->
-			<td class="alignRight">
+			<td id="reactants-expression">
 				{#each equation.reactants as [coefficient, molecule], index}		
 					{#if index !== 0}
 						<Katex math="+" />
@@ -82,12 +93,10 @@
 					<Katex math={toTex(molecule)} />
 				{/each}
 			</td>
-			<!-- arrow -->
-			<td class="alignCenter" colspan="3">
+			<td id="arrow">
 				<Katex math={"\\rightarrow"} />
 			</td>
-			<!-- prodcuts expression -->
-			<td>
+			<td id="products-expression">
 				{#each equation.products as [coefficient, molecule], index}
 		
 					{#if index !== 0}
@@ -100,42 +109,17 @@
 			</td>
 		</tr>
 		<!-- visualization -->
-		{#each orderedEntries as [element, counts]}
+		{#each widths as [element, counts, {reactants, width, products}]}
 		<tr>
-			<!-- recants bar -->
-			<td class="alignRight">
-				<svg
-					class="brett"
-					transform="scale(-1, 1)"
-					height={BAR_HEIGHT}
-					width={Math.max(counts.amountInProducts, counts.amountInReactants) * 20}
-				>
-					<rect class="owed-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInProducts * 20}></rect>
-					<rect class="has-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInReactants * 20}></rect>
-				</svg>
-			</td>
-			<!-- recants count -->
-			<td class="alignRight">
+			<td class="reactants-count">
 				<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
 			</td>
-			<!-- element symbol -->
-			<td class="alignCenter">
-				<Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex>
+			<td class="element-symbol">
+				<!-- <Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex> -->
+				<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
 			</td>
-			<!-- products count -->
-			<td>
+			<td class="products-count">
 				<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
-			</td>
-			<!-- products bar -->
-			<td>
-				<svg
-					class="brett"
-					height={BAR_HEIGHT}
-					width={Math.max(counts.amountInProducts, counts.amountInReactants) * 20}
-				>
-					<rect class="owed-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInReactants * 20}></rect>
-					<rect class="has-bar" x=0 y=0 height={BAR_HEIGHT} width={counts.amountInProducts * 20}></rect>
-				</svg>
 			</td>
 		</tr>
 		{/each}
@@ -172,23 +156,33 @@
 		outline: 3px solid black;
 	}
 
-	td {
-		text-align: left;
-	}
-
-	.alignRight {
+	#reactants-expression, .reactants-bar, .reactants-count {
 		text-align: right;
 	}
 
-	.alignCenter {
+	#arrow, .element-symbol {
 		text-align: center;
 	}
 
-	#reactants-and-prodcuts{
-		text-align: center;
+	#products-expression, .products-bar, .products-count {
+		text-align: left;
+	}
+
+	#reactants-expression, #products-expression {
+		width: 35%;
+	}
+
+	.reactants-count, .element-symbol, .products-count {
+		width: 10%;
+	}
+
+	#reactants-and-prodcuts {
 		padding: 1em;
 		margin: 0 auto;
 		width: 100%;
+	}
 
+	.x, .w, .y {
+		display: inline-block;
 	}
 </style>
