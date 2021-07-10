@@ -19,3 +19,13 @@ export function range(n: number): number[] {
 export function toStringMap<K>(map: Map<K, Counts>): string {
     return `{ ${[...map.entries()].map(([k, v]) => `${k}: (${v.amountInReactants}, ${v.amountInProducts})`).join(', ')} }`
 }
+
+export function replaceAtIndex<T>(array: T[], index: number, value: T): T[] {
+    let retVal = new Array<T>();
+    
+    for (let i = 0; i < array.length; i++){
+        retVal[i] = (i === index) ? value : array[i]
+    }
+
+    return retVal
+}

@@ -4,19 +4,9 @@
 	import { count, difference, intersection, isEmpty, Multiset, sumAll, toStringMultiset } from "./Multiset"
 	import Katex from "./Katex.svelte"
 	import type { ChemicalElement } from "./ChemicalElements";	
-	import { range, toStringMap } from "./helpers";
+	import { replaceAtIndex } from "./helpers";
 
 	let equation = randomEquation()
-
-	function replaceAtIndex<T>(array: T[], index: number, value: T): T[] {
-		let retVal = new Array<T>();
-		
-		for (let i = 0; i < array.length; i++){
-			retVal[i] = (i === index) ? value : array[i]
-		}
-
-		return retVal
-	}
 
 	let map: Map<ChemicalElement, Counts>
 	$: map = build(equation)
