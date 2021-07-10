@@ -21,8 +21,6 @@
 	let map: Map<ChemicalElement, Counts>
 	$: map = build(equation)
 
-	const size = 50
-
 	function withReactantCoefficientAtIndex(index: number, newCoefficient: number): Equation {
 		const [_, molecule] = equation.reactants[index]
 
@@ -62,7 +60,6 @@
 		}
 	})
 
-	const BAR_HEIGHT = 20
 	type Spacing = {reactants: number, width: number, products: number}
 
 	let widths: [ChemicalElement, Counts, Spacing][]
