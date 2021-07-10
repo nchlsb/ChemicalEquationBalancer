@@ -66,7 +66,6 @@
 
 <main>
 	<table id="reactants-and-prodcuts">
-		<!-- written products and recants -->
 		<tr>
 			<td id="reactants-expression">
 				{#each equation.reactants as [coefficient, molecule], index}		
@@ -95,14 +94,12 @@
 				{/each}
 			</td>
 		</tr>
-		<!-- visualization -->
 		{#each widths as [element, counts, {reactants, width, products}]}
-		<tr>
+		<tr id="equation-balance">
 			<td class="reactants-count">
 				<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
 			</td>
 			<td class="element-symbol">
-				<!-- <Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex> -->
 				<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
 			</td>
 			<td class="products-count">
