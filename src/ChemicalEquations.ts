@@ -228,8 +228,8 @@ export function randomEquation(): Equation {
 // H2SO4 + HI → H2S + I2 + H2O
 
 
-export function toTex(molecule: Molecule): string {
-    return `\\mathrm{${toString(molecule)}}`
+export function toTex(molecule: Molecule, coefficient = 1): string {
+    return `${((coefficient === 1) ? "" : coefficient)}\\mathrm{${toString(molecule)}}`
 }
 
 export function toString(molecule: Molecule): string {

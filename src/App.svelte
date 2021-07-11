@@ -65,6 +65,88 @@
 </script>
 
 <main>
+		<!-- new table -->
+		<table>
+			<tr id="increment-bar">
+				{#each equation.reactants as [coefficient, molecule], index}		
+					<td>
+						<button class="increment" on:click={_ => {equation = withReactantCoefficientAtIndex(index, coefficient + 1)}}>↑</button>
+					</td>
+					{#if index !== equation.reactants.length - 1}
+						<td />
+					{/if}
+				{/each}
+				<td></td>
+				{#each equation.products as [coefficient, molecule], index}		
+					<td>
+						<button class="increment" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient + 1)}}>↑</button>
+					</td>
+					{#if index !== equation.products.length - 1}
+						<td />
+					{/if}
+				{/each}
+			</tr>
+			<tr id="expressions">
+				{#each equation.reactants as [coefficient, molecule], index}		
+					<td>
+						<Katex math={toTex(molecule, coefficient)} />
+					</td>
+					{#if index !== equation.reactants.length - 1}
+						<td>
+							<Katex math="+" />
+						</td>
+					{/if}
+				{/each}
+				<td id="arrow">
+					<Katex math={"\\rightarrow"} />
+				</td>
+				{#each equation.products as [coefficient, molecule], index}		
+					<td>
+						<Katex math={toTex(molecule, coefficient)} />
+					</td>
+					{#if index !== equation.products.length - 1}
+						<td>
+							<Katex math="+" />
+						</td>
+					{/if}
+				{/each}	
+			</tr>
+			<tr id="decrement-bar">
+				{#each equation.reactants as [coefficient, molecule], index}		
+					<td>
+						<button class="decrement" disabled={coefficient === 1} on:click={_ => {equation = withReactantCoefficientAtIndex(index, coefficient - 1)}}>↓</button>
+					</td>
+					{#if index !== equation.reactants.length - 1}
+						<td />
+					{/if}
+				{/each}
+				<td></td>
+				{#each equation.products as [coefficient, molecule], index}		
+					<td>
+						<button class="decrement" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient + 1)}}>↓</button>
+					</td>
+					{#if index !== equation.products.length - 1}
+						<td />
+					{/if}
+				{/each}
+			</tr>
+		</table>
+	<table>
+		{#each widths as [element, counts, {reactants, width, products}]}
+		<tr id="equation-balance">
+			<td class="reactants-count">
+				<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
+			</td>
+			<td class="element-symbol">
+				<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
+			</td>
+			<td class="products-count">
+				<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
+			</td>
+		</tr>
+		{/each}
+	</table>
+
 	<table id="reactants-and-prodcuts">
 		<tr>
 			<td id="reactants-expression">
@@ -108,6 +190,7 @@
 		</tr>
 		{/each}
 	</table>
+
 </main>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <style>
@@ -128,16 +211,8 @@
 		width: 50px;
 	}
 	
-	.has-bar {
-		fill: black;
-	}
-
-	.owed-bar {
-		fill: white;
-	}
-
-	.brett {
-		outline: 3px solid black;
+	.increment, .decrement {
+		width: 100%;
 	}
 
 	#reactants-expression, .reactants-bar, .reactants-count {

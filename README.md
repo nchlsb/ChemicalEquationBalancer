@@ -1,6 +1,6 @@
 # Todo
-- [X] Format chemical equations with KaTeX
-- [X] Make a type for elements
+- [x] Format chemical equations with KaTeX
+- [x] Make a type for elements
 - [ ] Change the names of the molecules if the student changes the subscript (i.e. water changes to hydrogen peroxide)
 - [ ] Pull down molecules graphically to balance the equation
 - [x] Alternatively, change the coefficient for symbolic manipulation
@@ -18,10 +18,13 @@
 - [x] Implement isBalanced() (again) using the new Map type
 - [ ] Which bar is the reactants, and which is the products?
     - [x] (try the "Spread Wing" style)
-    - [ ] Change the color of the specific bar when it's balanced (when a       particular molecule is balanced)
+    - [ ] Change the color of the specific bar when it's balanced (when a particular molecule is balanced)
 - [ ] Sort elements by atomic weight (and implement atomic weight function)
-- [ ] The "spread wing" bars are always the same length on either side. Is that redundant
+- [x] The "spread wing" bars are always the same length on either side. Is that redundant
       information a problem?
-- [ ] Solve the styling issue where the --> is not in the center of the screen
-- [ ] Remove the magic number 20 / replace as a constant, or remove completely somehow (using screen percentages, i.e., the largest bar always stretches to the end of the screen)
-- [ ] Rename alignRight and alignCenter classes
+- [x] Solve the styling issue where the --> is not in the center of the screen
+- [x] Remove the magic number 20 / replace as a constant, or remove completely somehow (using screen percentages, i.e., the largest bar always stretches to the end of the screen)
+- [x] Rename alignRight and alignCenter classes
+- [ ] add even more equations
+- [ ] add the other tabs
+- [ ] add instructions 
