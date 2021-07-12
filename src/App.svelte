@@ -62,6 +62,10 @@
 			products: (100 - w) * counts.amountInProducts / totalElements
 		}]
 	})
+
+	const INCREASE = "▲";
+	const DECREASE = "▼"
+	
 </script>
 
 <main>
@@ -70,7 +74,7 @@
 			<tr id="increment-bar">
 				{#each equation.reactants as [coefficient, molecule], index}		
 					<td>
-						<button class="increment" on:click={_ => {equation = withReactantCoefficientAtIndex(index, coefficient + 1)}}>↑</button>
+						<button class="increment" on:click={_ => {equation = withReactantCoefficientAtIndex(index, coefficient + 1)}}>{INCREASE}</button>
 					</td>
 					{#if index !== equation.reactants.length - 1}
 						<td />
@@ -79,7 +83,7 @@
 				<td></td>
 				{#each equation.products as [coefficient, molecule], index}		
 					<td>
-						<button class="increment" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient + 1)}}>↑</button>
+						<button class="increment" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient + 1)}}>{INCREASE}</button>
 					</td>
 					{#if index !== equation.products.length - 1}
 						<td />
@@ -114,7 +118,7 @@
 			<tr id="decrement-bar">
 				{#each equation.reactants as [coefficient, molecule], index}		
 					<td>
-						<button class="decrement" disabled={coefficient === 1} on:click={_ => {equation = withReactantCoefficientAtIndex(index, coefficient - 1)}}>↓</button>
+						<button class="decrement" disabled={coefficient === 1} on:click={_ => {equation = withReactantCoefficientAtIndex(index, coefficient - 1)}}>{DECREASE}</button>
 					</td>
 					{#if index !== equation.reactants.length - 1}
 						<td />
@@ -123,7 +127,7 @@
 				<td></td>
 				{#each equation.products as [coefficient, molecule], index}		
 					<td>
-						<button class="decrement" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient + 1)}}>↓</button>
+						<button class="decrement" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient + 1)}}>{DECREASE}</button>
 					</td>
 					{#if index !== equation.products.length - 1}
 						<td />
