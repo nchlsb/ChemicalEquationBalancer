@@ -6,6 +6,10 @@
 	import type { ChemicalElement } from "./ChemicalElements";	
 	import { replaceAtIndex } from "./helpers";
 
+	type Context = "Balancer" | "About"
+	let context: Context
+	$: context = "Balancer"
+
 	let equation = randomEquation()
 
 	let map: Map<ChemicalElement, Counts>
@@ -69,8 +73,12 @@
 </script>
 
 <main>
-		<!-- new table -->
-		<table>
+	<p>
+		<button class={context === 'Balancer' ? 'highlighted' : ''}  on:click={_ => context = 'Balancer'}>Balancer</button>
+		| <button class={context === 'About' ? 'highlighted' : ''}  on:click={_ => context = 'About'}>About</button>
+	</p>
+	{#if context === 'Balancer'}
+		<table id="reactants-and-prodcuts">
 			<tr id="increment-bar">
 				{#each equation.reactants as [coefficient, molecule], index}		
 					<td>
@@ -135,66 +143,88 @@
 				{/each}
 			</tr>
 		</table>
-	<table>
-		{#each widths as [element, counts, {reactants, width, products}]}
-		<tr id="equation-balance">
-			<td class="reactants-count">
-				<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
-			</td>
-			<td class="element-symbol">
-				<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
-			</td>
-			<td class="products-count">
-				<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
-			</td>
-		</tr>
-		{/each}
-	</table>
+		<table id="equation-balance">
+			{#each widths as [element, counts, {reactants, width, products}]}
+			<tr>
+				<td class="reactants-count">
+					<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
+				</td>
+				<td class="element-symbol">
+					<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
+				</td>
+				<td class="products-count">
+					<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
+				</td>
+			</tr>
+			{/each}
+		</table>
 
-	<table id="reactants-and-prodcuts">
-		<tr>
-			<td id="reactants-expression">
-				{#each equation.reactants as [coefficient, molecule], index}		
-					{#if index !== 0}
-						<Katex math="+" />
-					{/if}
-					<input type="number" min="1" bind:value={coefficient} on:input={event => {
-						equation = withReactantCoefficientAtIndex(index, parseInt(event.currentTarget.value))
-					}}>
-					
-					<Katex math={toTex(molecule)} />
-				{/each}
-			</td>
-			<td id="arrow">
-				<Katex math={"\\rightarrow"} />
-			</td>
-			<td id="products-expression">
-				{#each equation.products as [coefficient, molecule], index}
-		
-					{#if index !== 0}
-						<Katex math="+" />
-					{/if}
-					<input type="number" min="1" bind:value={coefficient} on:input={event =>
-						equation = withProductCoefficientAtIndex(index, parseInt(event.currentTarget.value))
-					}> <Katex math={toTex(molecule)} />
-				{/each}
-			</td>
-		</tr>
-		{#each widths as [element, counts, {reactants, width, products}]}
-		<tr id="equation-balance">
-			<td class="reactants-count">
-				<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
-			</td>
-			<td class="element-symbol">
-				<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
-			</td>
-			<td class="products-count">
-				<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
-			</td>
-		</tr>
-		{/each}
-	</table>
-
+		<!-- old table -->
+		<!-- <table id="reactants-and-prodcuts">
+			<tr>
+				<td id="reactants-expression">
+					{#each equation.reactants as [coefficient, molecule], index}		
+						{#if index !== 0}
+							<Katex math="+" />
+						{/if}
+						<input type="number" min="1" bind:value={coefficient} on:input={event => {
+							equation = withReactantCoefficientAtIndex(index, parseInt(event.currentTarget.value))
+						}}>
+						
+						<Katex math={toTex(molecule)} />
+					{/each}
+				</td>
+				<td id="arrow">
+					<Katex math={"\\rightarrow"} />
+				</td>
+				<td id="products-expression">
+					{#each equation.products as [coefficient, molecule], index}
+			
+						{#if index !== 0}
+							<Katex math="+" />
+						{/if}
+						<input type="number" min="1" bind:value={coefficient} on:input={event =>
+							equation = withProductCoefficientAtIndex(index, parseInt(event.currentTarget.value))
+						}> <Katex math={toTex(molecule)} />
+					{/each}
+				</td>
+			</tr>
+			{#each widths as [element, counts, {reactants, width, products}]}
+			<tr id="equation-balance">
+				<td class="reactants-count">
+					<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
+				</td>
+				<td class="element-symbol">
+					<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
+				</td>
+				<td class="products-count">
+					<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
+				</td>
+			</tr>
+			{/each}
+		</table> -->
+	{:else}
+		<h1>Chemical Equation Balancing App</h1>
+		<h2>Todo - write a blurb</h2>
+			<p>Todo - write a subblurb if needed</p>
+		<h2>Credits</h2>
+			<h3>Devlopers: 
+				<a href="https://github.com/schreiberbrett">Brett Schreiber</a> and
+				<a href="https://github.com/nchlsb">Nick Brady</a> 
+			</h3>
+			<h3>Chemistery Tutors Conulsted: </h3>
+			<h3>UI/UX Consultant: </h3>
+			<h3> Introduced the Devs to Eachother: Cal Doughan</h3>
+			<!-- <h3>
+				Insperations:
+				<a href="https://www.desmos.com/calculator">Desmos</a> and
+				<a href="https://www.youtube.com/watch?v=WUvTyaaNkzM"> 3Blue1Brown</a> 
+			</h3> -->
+		<h2>Source Code</h2>
+			<a href="https://github.com/nchlsb/ChemicalEquationBalancer">Link to GitHub</a>
+	{/if}
+	
+	
 </main>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 <style>
@@ -239,13 +269,17 @@
 		width: 10%;
 	}
 
-	#reactants-and-prodcuts {
+	#reactants-and-prodcuts, #equation-balance {
 		padding: 1em;
 		margin: 0 auto;
-		width: 100%;
+		width: 75%;
 	}
 
 	.x, .w, .y {
 		display: inline-block;
+	}
+
+	.highlighted {
+		background-color: limegreen;
 	}
 </style>
