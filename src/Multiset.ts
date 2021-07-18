@@ -87,6 +87,17 @@ function universe<T>(a: Multiset<T>, b: Multiset<T>): T[] {
     ]).values()]
 }
 
+export function equals<T>(a: Multiset<T>, b: Multiset<T>): boolean {
+    return universe(a, b).every(element => count(a, element) === count(b, element))   
+
+    // test cases
+    // Ignoring efficiency, what is true if the following are true?
+    // Scenario A: Multiset.isEmpty(Multiset.difference(a, b))
+    // Scenario B: Multiset.isEmpty(Multiset.difference(b, a))
+    // Scenario C: Multiset.isSubset(a, b) && Multiset.isSubset(b, a)
+    // Scenario D: Multiset.isEmpty(a) && Multiset.isEmpty(b)
+}
+
 export function toStringMultiset<T>(multiset: Multiset<T>){
     return `{ ${[...multiset.elements.entries()].map(([k, v]) => `${k}: ${v}`).join(', ')} }`
 }

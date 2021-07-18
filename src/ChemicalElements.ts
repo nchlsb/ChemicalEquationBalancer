@@ -118,6 +118,6 @@ export type ChemicalElement =
     "Zn" |
     "Zr" 
 
-export function atomicWeight(x: ChemicalElement): number {
+export function atomicNumber(x: ChemicalElement): number {
     return undefined
 }

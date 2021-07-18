@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { Counts, element, Equation } from "./ChemicalEquations"; 
-	import { build, randomEquation, toTex, countElements, isBalanced } from "./ChemicalEquations";
-	import { count, difference, intersection, isEmpty, Multiset, sumAll, toStringMultiset } from "./Multiset"
+	import type { Equation } from "./ChemicalEquations"; 
+	import { atomsPerElementOnEquationSide, randomEquation, toTex, isBalanced } from "./ChemicalEquations";
 	import Katex from "./Katex.svelte"
+	import { sortBy } from 'ramda'
 	import type { ChemicalElement } from "./ChemicalElements";	
 	import { replaceAtIndex } from "./helpers";
 
@@ -11,9 +11,6 @@
 	$: context = "Balancer"
 
 	let equation = randomEquation()
-
-	let map: Map<ChemicalElement, Counts>
-	$: map = build(equation)
 
 	function withReactantCoefficientAtIndex(index: number, newCoefficient: number): Equation {
 		const [_, molecule] = equation.reactants[index]
@@ -43,33 +40,36 @@
 			}
 	}
 
-	let orderedEntries: [ChemicalElement, Counts][]
-	$: orderedEntries = [...map.entries()].sort(([a, _], [b, __]) => {
-		if (a < b) {
-			return -1
-		} else if (a === b) {
-			return 0
-		} else {
-			return 1
-		}
-	})
+	type ElementView = {
+		chemicalElement: ChemicalElement,
+		
+		atomsInReactants: number,
+		atomsInProducts: number,
 
-	type Spacing = {reactants: number, width: number, products: number}
+		reactantsPercent: number,
+		elementNamePercent: number,
+		productsPercent: number
+	}
 
-	let widths: [ChemicalElement, Counts, Spacing][]
-	$: widths = orderedEntries.map(([element, counts]) => {
-		const totalElements = counts.amountInProducts + counts.amountInReactants
+	let elementViews: ElementView[]
+	$: elementViews =  sortBy(([x, _]) => /* TODO: atomicNumber(x) */ x, [...atomsPerElementOnEquationSide(equation).entries()])
+	.map(([element, [atomsInReactants, atomsInProducts]]) => {
+		const totalAtoms = atomsInReactants + atomsInProducts
 		const w = 5 // percent
-		return [element, counts, {
-			reactants: (100 - w) * counts.amountInReactants / totalElements,
-			width: w,
-			products: (100 - w) * counts.amountInProducts / totalElements
-		}]
+		return {
+			chemicalElement: element,
+
+			atomsInReactants,
+			atomsInProducts,
+
+			reactantsPercent: (100 - w) * atomsInReactants / totalAtoms,
+			elementNamePercent: w,
+			productsPercent: (100 - w) * atomsInProducts / totalAtoms
+		}
 	})
 
 	const INCREASE = "▲";
 	const DECREASE = "▼"
-	
 </script>
 
 <main>
@@ -77,6 +77,7 @@
 		<button class={context === 'Balancer' ? 'highlighted' : ''}  on:click={_ => context = 'Balancer'}>Balancer</button>
 		| <button class={context === 'About' ? 'highlighted' : ''}  on:click={_ => context = 'About'}>About</button>
 	</p>
+	<p>isBalanced: {isBalanced(equation)}</p>
 	{#if context === 'Balancer'}
 		<table id="reactants-and-prodcuts">
 			<tr id="increment-bar">
@@ -144,65 +145,20 @@
 			</tr>
 		</table>
 		<table id="equation-balance">
-			{#each widths as [element, counts, {reactants, width, products}]}
+			{#each elementViews as {chemicalElement, atomsInReactants, atomsInProducts, reactantsPercent, elementNamePercent, productsPercent}}
 			<tr>
 				<td class="reactants-count">
-					<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
+					<Katex math={atomsInReactants.toString()} displayMode={false}></Katex>
 				</td>
 				<td class="element-symbol">
-					<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
+					<div><div class="x" style="width: {productsPercent}%"></div><div class="w" style="width: {elementNamePercent}%"><Katex math={`\\mathrm{${chemicalElement}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactantsPercent}%"></div></div>
 				</td>
 				<td class="products-count">
-					<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
+					<Katex math={atomsInProducts.toString()} displayMode={false}></Katex>
 				</td>
 			</tr>
 			{/each}
 		</table>
-
-		<!-- old table -->
-		<!-- <table id="reactants-and-prodcuts">
-			<tr>
-				<td id="reactants-expression">
-					{#each equation.reactants as [coefficient, molecule], index}		
-						{#if index !== 0}
-							<Katex math="+" />
-						{/if}
-						<input type="number" min="1" bind:value={coefficient} on:input={event => {
-							equation = withReactantCoefficientAtIndex(index, parseInt(event.currentTarget.value))
-						}}>
-						
-						<Katex math={toTex(molecule)} />
-					{/each}
-				</td>
-				<td id="arrow">
-					<Katex math={"\\rightarrow"} />
-				</td>
-				<td id="products-expression">
-					{#each equation.products as [coefficient, molecule], index}
-			
-						{#if index !== 0}
-							<Katex math="+" />
-						{/if}
-						<input type="number" min="1" bind:value={coefficient} on:input={event =>
-							equation = withProductCoefficientAtIndex(index, parseInt(event.currentTarget.value))
-						}> <Katex math={toTex(molecule)} />
-					{/each}
-				</td>
-			</tr>
-			{#each widths as [element, counts, {reactants, width, products}]}
-			<tr id="equation-balance">
-				<td class="reactants-count">
-					<Katex math={counts.amountInReactants.toString()} displayMode={false}></Katex>
-				</td>
-				<td class="element-symbol">
-					<div><div class="x" style="width: {products}%"></div><div class="w" style="width: {width}%"><Katex math={`\\mathrm{${element}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactants}%"></div></div>
-				</td>
-				<td class="products-count">
-					<Katex math={counts.amountInProducts.toString()} displayMode={false}></Katex>
-				</td>
-			</tr>
-			{/each}
-		</table> -->
 	{:else}
 		<h1>Chemical Equation Balancing App</h1>
 		<h2>Todo - write a blurb</h2>

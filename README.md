@@ -19,12 +19,13 @@
 - [ ] Which bar is the reactants, and which is the products?
     - [x] (try the "Spread Wing" style)
     - [ ] Change the color of the specific bar when it's balanced (when a particular molecule is balanced)
-- [ ] Sort elements by atomic weight (and implement atomic weight function)
+- [ ] Sort elements by atomic number (and implement atomic number function)
 - [x] The "spread wing" bars are always the same length on either side. Is that redundant
       information a problem?
 - [x] Solve the styling issue where the --> is not in the center of the screen
 - [x] Remove the magic number 20 / replace as a constant, or remove completely somehow (using screen percentages, i.e., the largest bar always stretches to the end of the screen)
 - [x] Rename alignRight and alignCenter classes
 - [ ] add even more equations
-- [ ] add the other tabs
-- [ ] add instructions 
+- [x] add the other tabs
+- [ ] add instructions
+- [ ] Use typescript-collections Bag<T> instead of Multiset<T>

@@ -1,6 +1,6 @@
 import type { ChemicalElement } from "./ChemicalElements"
-import { randomIntegerUpTo } from "./helpers"
-import { multiplyCounts, Multiset, singleton, sumAll, intersection, difference, isEmpty} from './Multiset'
+import { outerJoin, randomIntegerUpTo } from "./helpers"
+import { multiplyCounts, Multiset, singleton, sumAll, equals, intersection, difference, isEmpty} from './Multiset'
 
 
 export type Molecule = {
@@ -80,39 +80,74 @@ export function countElements(molecule: Molecule, coefficient = 1): Multiset<Che
     }
 }
 
-export type Counts = {
-    amountInReactants: number
-    amountInProducts: number
-}
+// How do you count an equation?
+// Multiset<Reactants> === Multiset<Products> ?
 
-export function build(equation: Equation): Map<ChemicalElement, Counts> {
+// totalAtomsPerMolecule? 
+export function atomsPerElementOnEquationSide(equation: Equation): Map<ChemicalElement, [number, number]> {
 	const reactants = sumAll(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient))).elements
 	const products = sumAll(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient))).elements
 
-    return combine(reactants, products)
+    return outerJoin(reactants, products, 0, 0)
 }
 
-function combine(reactants: Map<ChemicalElement, number>, products: Map<ChemicalElement, number>): Map<ChemicalElement, Counts> {    
-    let map = new Map<ChemicalElement, Counts>()
-
-    const allElements = [...new Set([ // unique keys
-        ...reactants.keys(),
-        ...products.keys()
-    ]).values()]
+// f : [Map<A, B>, Map<A, C>] --> [Map<A, [B, C]>]
 
 
-    for (let element of allElements) {
-        map.set(element, {
-            amountInProducts: products.get(element) || 0,
-            amountInReactants: reactants.get(element) || 0
-        })
+
+export function isBalanced3(equation: Equation): boolean {
+    const atomsInReactants: Map<ChemicalElement, number> = undefined
+    const atomsInProducts: Map<ChemicalElement, number> = undefined
+
+
+     // ~ does r/ have the same total count of atoms for each element as p/ 
+    const atoms: Iterable<ChemicalElement> = undefined
+    for (const atom of atoms) {
+        if (
+            !atomsInReactants.has(atom) || !atomsInProducts.has(atom) ||
+            atomsInReactants.get(atom) !== atomsInProducts.get(atom)
+        ) {
+            return false
+        }
     }
 
-    return map
+    return true
 }
 
-export function isBalanced(map: Map<ChemicalElement, Counts>): boolean {
-    return [...map.values()].every(counts => counts.amountInReactants === counts.amountInProducts)
+export function isBalanced(equation: Equation): boolean {
+    const reactants = sumAll(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient))).elements
+	const products = sumAll(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient))).elements
+
+    const atomsInReactants: Map<ChemicalElement, number> = sumAll(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient))).elements
+    const atomsInProducts: Map<ChemicalElement, number> = sumAll(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient))).elements
+
+     // ~ does r/ have the same total count of atoms for each element as p/ 
+    const atoms: Array<ChemicalElement> = [ ...new Set([
+        ...atomsInReactants.keys(),
+        ...atomsInProducts.keys()
+    ])]
+
+    return atoms.every(atom =>
+        atomsInReactants.has(atom) &&
+        atomsInProducts.has(atom) &&
+        atomsInReactants.get(atom) === atomsInProducts.get(atom)
+    )
+}
+
+// [Map<A, B>, Map<A, C>]                 <====> Map<A, [B, C]>
+// ^ Multiset p, ^ Multiset r             <====> Map<A, Counts>
+
+
+export function isBalanced5(equation: Equation): boolean {
+    return equals(reactantAtoms(equation), productAtoms(equation))
+}
+
+function reactantAtoms(equation: Equation): Multiset<ChemicalElement> {
+    return sumAll(equation.reactants.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
+}
+
+function productAtoms(equation: Equation): Multiset<ChemicalElement> {
+    return sumAll(equation.products.map(([coefficient, molecule]) => countElements(molecule, coefficient)))
 }
 
 // 4-tuple (Bool, Bool, Bool, Bool) = 2^4 = 16 
@@ -211,7 +246,8 @@ export const examples: Equation[] = [
 ]
 
 export function randomEquation(): Equation {
-    return examples[randomIntegerUpTo(examples.length)]
+    //return examples[randomIntegerUpTo(examples.length)]
+    return examples[0]
 }
 
 
