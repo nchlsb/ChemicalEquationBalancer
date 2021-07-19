@@ -1,5 +1,5 @@
 import { ChemicalElement, compound, element, H_2O, Molecule } from "./ChemicalElements"
-import { outerJoin } from "./helpers"
+import { outerJoin, randomIntegerUpTo } from "./helpers"
 import { multiplyCounts, Multiset, singleton, sumAll} from './Multiset'
 
 
@@ -173,8 +173,8 @@ export const examples: Equation[] = [
 ]
 
 export function randomEquation(): Equation {
-    //return examples[randomIntegerUpTo(examples.length)]
-    return examples[0]
+    return examples[randomIntegerUpTo(examples.length)]
+    //return examples[0]
 }
 
 

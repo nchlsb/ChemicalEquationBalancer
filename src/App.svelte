@@ -138,7 +138,7 @@
 				<td></td>
 				{#each equation.products as [coefficient, molecule], index}		
 					<td>
-						<button class="decrement" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient + 1)}}>{DECREASE}</button>
+						<button class="decrement" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient - 1)}}>{DECREASE}</button>
 					</td>
 					{#if index !== equation.products.length - 1}
 						<td />
