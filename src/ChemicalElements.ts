@@ -29,7 +29,7 @@ const oxygen: Molecule = element('O', 2)
 
 const water: Molecule = compound([element('H', 2), element('O')])
 
-function H_2O(): Molecule {
+export function H_2O(): Molecule {
     return compound([element('H', 2), element('O')])
 }
 

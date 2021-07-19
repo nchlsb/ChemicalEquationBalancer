@@ -1,4 +1,4 @@
-import { ChemicalElement, compound, element, Molecule } from "./ChemicalElements"
+import { ChemicalElement, compound, element, H_2O, Molecule } from "./ChemicalElements"
 import { outerJoin } from "./helpers"
 import { multiplyCounts, Multiset, singleton, sumAll} from './Multiset'
 
@@ -205,8 +205,3 @@ export function toString(molecule: Molecule): string {
             `(${molecule.molecules.map(molecule => toString(molecule)).join('')})_{${molecule.subscript}}`
     }
 }
-
-function H_2O(): Molecule {
-    throw new Error("Function not implemented.")
-}
-
