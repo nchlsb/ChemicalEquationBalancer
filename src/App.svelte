@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Equation } from "./ChemicalEquations"; 
-	import { atomsPerElementOnEquationSide, randomEquation, toTex, isBalanced } from "./ChemicalEquations";
+	import { atomsPerElementOnEquationSide, randomEquation, toTex, isBalanced, reactantAtoms} from "./ChemicalEquations";
 	import Katex from "./Katex.svelte"
 	import { sortBy } from 'ramda'
 	import type { ChemicalElement } from "./ChemicalElements";	
@@ -69,7 +69,7 @@
 	})
 
 	const INCREASE = "▲";
-	const DECREASE = "▼"
+	const DECREASE = "▼";
 </script>
 
 <main>
@@ -77,8 +77,10 @@
 		<button class={context === 'Balancer' ? 'highlighted' : ''}  on:click={_ => context = 'Balancer'}>Balancer</button>
 		| <button class={context === 'About' ? 'highlighted' : ''}  on:click={_ => context = 'About'}>About</button>
 	</p>
-	<p>isBalanced: {isBalanced(equation)}</p>
 	{#if context === 'Balancer'}
+		<p>
+			{(isBalanced(equation)) ? '✅ Equation is balanced' : '❌ Equation not balanced'}
+		</p>
 		<table id="reactants-and-prodcuts">
 			<tr id="increment-bar">
 				{#each equation.reactants as [coefficient, molecule], index}		

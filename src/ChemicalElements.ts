@@ -1,3 +1,38 @@
+export type Molecule = {
+    kind: 'Compound'
+    molecules: Molecule[]
+    subscript: number
+} | {
+    kind: 'Element'
+    element: ChemicalElement
+    subscript: number
+}
+
+export function compound(molecules: Molecule[], subscript = 1): Molecule {
+    return {
+        kind: 'Compound',
+        molecules,
+        subscript: subscript
+    }
+}
+
+export function element(element: ChemicalElement, subscript = 1): Molecule {
+    return {
+        kind: 'Element',
+        element,
+        subscript: subscript
+    }
+}
+
+// O2
+const oxygen: Molecule = element('O', 2)
+
+const water: Molecule = compound([element('H', 2), element('O')])
+
+function H_2O(): Molecule {
+    return compound([element('H', 2), element('O')])
+}
+
 export type ChemicalElement = 
     "Ac" |
     "Al" |
