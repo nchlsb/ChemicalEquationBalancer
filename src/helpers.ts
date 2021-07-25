@@ -14,15 +14,15 @@ export function range(n: number): number[] {
     return retVal;
 }
 
-// export function replaceAtIndex<T>(array: T[], index: number, value: T): T[] {
-//     let retVal = new Array<T>();
+export function replaceAtIndex<T>(array: T[], index: number, value: T): T[] {
+    let retVal = new Array<T>();
     
-//     for (let i = 0; i < array.length; i++){
-//         retVal[i] = (i === index) ? value : array[i]
-//     }
+    for (let i = 0; i < array.length; i++){
+        retVal[i] = (i === index) ? value : array[i]
+    }
 
-//     return retVal
-// }
+    return retVal
+}
 
 export function outerJoin<K, V1, V2>(v1: Map<K, V1>, v2: Map<K, V2>, defaultV1: V1, defaultV2: V2): Map<K, [V1, V2]> {
     const allKeys = [...new Set([ // unique keys

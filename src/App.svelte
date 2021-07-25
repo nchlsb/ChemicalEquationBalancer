@@ -1,10 +1,11 @@
 <script lang="ts">
+	import type { ChemicalElement } from "./ChemicalElements";
 	import type { Equation } from "./ChemicalEquations"; 
 	import { atomsPerElementOnEquationSide, randomEquation, toTex, isBalanced } from "./ChemicalEquations";
-	import Katex from "./Katex.svelte"
+	import { atomicNumber } from "./ChemicalElements"
 	import { sortBy } from 'ramda'
-	import type { ChemicalElement } from "./ChemicalElements";	
 	import { replaceAtIndex } from "./helpers";
+	import Katex from "./Katex.svelte"
 
 	type Context = "Balancer" | "About"
 	let context: Context
@@ -52,7 +53,7 @@
 	}
 
 	let elementViews: ElementView[]
-	$: elementViews =  sortBy(([x, _]) => /* TODO: atomicNumber(x) */ x, [...atomsPerElementOnEquationSide(equation).entries()])
+	$: elementViews =  sortBy(([x, _]) => atomicNumber(x), [...atomsPerElementOnEquationSide(equation).entries()])
 	.map(([element, [atomsInReactants, atomsInProducts]]) => {
 		const totalAtoms = atomsInReactants + atomsInProducts
 		const w = 5 // percent
