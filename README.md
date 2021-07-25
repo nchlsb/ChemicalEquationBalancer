@@ -1,24 +1,21 @@
 # Todo
 - [x] Format chemical equations with KaTeX
 - [x] Make a type for elements
-- [ ] Change the names of the molecules if the student changes the subscript (i.e. water changes to hydrogen peroxide)
-- [ ] Pull down molecules graphically to balance the equation
 - [x] Alternatively, change the coefficient for symbolic manipulation
-    - [ ] Let the appropriate number of graphical molecules automatically appear
 - [x] Keep track of the total number of elements on each side
 - [x] Keep track of what imbalanced elements need to be compensated for (i.e. "You need to have 4 more hydrogen in the result for the equation to balance.")
     - [x] Show this graphically (see paint picture)
 - [x] Change "List" to a better name in the Molecule type
 - [ ] Find balancing equation examples
     - [x] Make a list of equations (H_2 O_2 -> H_2O) (Fe_6 ?? )
-    - [ ] Make the game loop where you pull a random equation, the student balances it, then plays again ("New Equation")
+    - [ ] Make the game loop where you pull a random equation, the student balances it, then plays again ("New Equation") (only enabled when the equation is balanced)
     - [ ] Don't "Play Again" and get the same equation twice
     - [ ] Catagorize into easy and hard
 - [x] Graphically represent imbalances better
 - [x] Implement isBalanced() (again) using the new Map type
 - [ ] Which bar is the reactants, and which is the products?
     - [x] (try the "Spread Wing" style)
-    - [ ] Change the color of the specific bar when it's balanced (when a particular molecule is balanced)
+    - [x] Change the color of the specific bar when it's balanced (when a particular molecule is balanced)
 - [ ] Sort elements by atomic number (and implement atomic number function)
 - [x] The "spread wing" bars are always the same length on either side. Is that redundant
       information a problem?
