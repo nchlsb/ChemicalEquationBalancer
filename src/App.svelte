@@ -81,9 +81,26 @@
 		<p>
 			{(isBalanced(equation)) ? '✅ Equation is balanced' : '❌ Equation not balanced'}
 		</p>
+		
+		<table id="equation-balance">
+			{#each elementViews as {chemicalElement, atomsInReactants, atomsInProducts, reactantsPercent, elementNamePercent, productsPercent}}
+			<tr>
+				<td class="reactants-count">
+					<Katex math={atomsInReactants.toString()} displayMode={false}></Katex>
+				</td>
+				<td class="element-symbol">
+					<div><div class="x" style="width: {productsPercent}%"></div><div class="w" style="width: {elementNamePercent}%"><Katex math={`\\mathrm{${chemicalElement}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactantsPercent}%"></div></div>
+				</td>
+				<td class="products-count">
+					<Katex math={atomsInProducts.toString()} displayMode={false}></Katex>
+				</td>
+			</tr>
+			{/each}
+		</table>
+
 		<table id="reactants-and-prodcuts">
 			<tr id="increment-bar">
-				{#each equation.reactants as [coefficient, molecule], index}		
+				{#each equation.reactants as [coefficient, _], index}		
 					<td>
 						<button class="increment" on:click={_ => {equation = withReactantCoefficientAtIndex(index, coefficient + 1)}}>{INCREASE}</button>
 					</td>
@@ -92,7 +109,7 @@
 					{/if}
 				{/each}
 				<td></td>
-				{#each equation.products as [coefficient, molecule], index}		
+				{#each equation.products as [coefficient, _], index}		
 					<td>
 						<button class="increment" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient + 1)}}>{INCREASE}</button>
 					</td>
@@ -127,7 +144,7 @@
 				{/each}	
 			</tr>
 			<tr id="decrement-bar">
-				{#each equation.reactants as [coefficient, molecule], index}		
+				{#each equation.reactants as [coefficient, _], index}		
 					<td>
 						<button class="decrement" disabled={coefficient === 1} on:click={_ => {equation = withReactantCoefficientAtIndex(index, coefficient - 1)}}>{DECREASE}</button>
 					</td>
@@ -136,30 +153,15 @@
 					{/if}
 				{/each}
 				<td></td>
-				{#each equation.products as [coefficient, molecule], index}		
+				{#each equation.products as [coefficient, _], index}		
 					<td>
-						<button class="decrement" on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient - 1)}}>{DECREASE}</button>
+						<button class="decrement" disabled={coefficient === 1} on:click={_ => {equation = withProductCoefficientAtIndex(index, coefficient - 1)}}>{DECREASE}</button>
 					</td>
 					{#if index !== equation.products.length - 1}
 						<td />
 					{/if}
 				{/each}
 			</tr>
-		</table>
-		<table id="equation-balance">
-			{#each elementViews as {chemicalElement, atomsInReactants, atomsInProducts, reactantsPercent, elementNamePercent, productsPercent}}
-			<tr>
-				<td class="reactants-count">
-					<Katex math={atomsInReactants.toString()} displayMode={false}></Katex>
-				</td>
-				<td class="element-symbol">
-					<div><div class="x" style="width: {productsPercent}%"></div><div class="w" style="width: {elementNamePercent}%"><Katex math={`\\mathrm{${chemicalElement}}`} displayMode={false}></Katex></div><div class="y" style="width: {reactantsPercent}%"></div></div>
-				</td>
-				<td class="products-count">
-					<Katex math={atomsInProducts.toString()} displayMode={false}></Katex>
-				</td>
-			</tr>
-			{/each}
 		</table>
 	{:else}
 		<h1>Chemical Equation Balancing App</h1>
@@ -188,26 +190,13 @@
 <style>
 	main {
 		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-
-	input[type="number"] {
-		width: 50px;
 	}
 	
 	.increment, .decrement {
 		width: 100%;
 	}
 
-	#reactants-expression, .reactants-bar, .reactants-count {
+	.reactants-count {
 		text-align: right;
 	}
 
@@ -215,22 +204,25 @@
 		text-align: center;
 	}
 
-	#products-expression, .products-bar, .products-count {
+	.products-count {
 		text-align: left;
 	}
 
-	#reactants-expression, #products-expression {
-		width: 35%;
+	.reactants-count,.products-count {
+		max-width: 100%;
+		white-space: nowrap;
 	}
 
-	.reactants-count, .element-symbol, .products-count {
-		width: 10%;
+	.element-symbol {
+		width: 100%;
 	}
 
-	#reactants-and-prodcuts, #equation-balance {
-		padding: 1em;
+	#reactants-and-prodcuts {
 		margin: 0 auto;
-		width: 75%;
+	}
+
+	#equation-balance {
+		margin: 0 10vw;
 	}
 
 	.x, .w, .y {
@@ -239,5 +231,13 @@
 
 	.highlighted {
 		background-color: limegreen;
+	}
+
+	td {
+		padding: 0px 5px;
+	}
+
+	#equation-balance td {
+		padding: 15px 5px;
 	}
 </style>
