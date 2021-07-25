@@ -14,15 +14,15 @@ export function range(n: number): number[] {
     return retVal;
 }
 
-export function replaceAtIndex<T>(array: T[], index: number, value: T): T[] {
-    let retVal = new Array<T>();
+// export function replaceAtIndex<T>(array: T[], index: number, value: T): T[] {
+//     let retVal = new Array<T>();
     
-    for (let i = 0; i < array.length; i++){
-        retVal[i] = (i === index) ? value : array[i]
-    }
+//     for (let i = 0; i < array.length; i++){
+//         retVal[i] = (i === index) ? value : array[i]
+//     }
 
-    return retVal
-}
+//     return retVal
+// }
 
 export function outerJoin<K, V1, V2>(v1: Map<K, V1>, v2: Map<K, V2>, defaultV1: V1, defaultV2: V2): Map<K, [V1, V2]> {
     const allKeys = [...new Set([ // unique keys
@@ -39,17 +39,17 @@ export function outerJoin<K, V1, V2>(v1: Map<K, V1>, v2: Map<K, V2>, defaultV1: 
     return map
 }
 
-export function innerJoin<K, V1, V2>(v1: Map<K, V1>, v2: Map<K, V2>): Map<K, [V1, V2]> {
-    const commonKeys = [...new Set([ // unique keys
-        ...v1.keys(),
-        ...v2.keys()
-    ]).values()].filter(k => v1.has(k) && v2.has(k))
+// export function innerJoin<K, V1, V2>(v1: Map<K, V1>, v2: Map<K, V2>): Map<K, [V1, V2]> {
+//     const commonKeys = [...new Set([ // unique keys
+//         ...v1.keys(),
+//         ...v2.keys()
+//     ]).values()].filter(k => v1.has(k) && v2.has(k))
 
-    let map = new Map<K, [V1, V2]>()
+//     let map = new Map<K, [V1, V2]>()
 
-    for (let key of commonKeys) {
-        map.set(key, [v1.get(key), v2.get(key)])
-    }
+//     for (let key of commonKeys) {
+//         map.set(key, [v1.get(key), v2.get(key)])
+//     }
 
-    return map
-}
+//     return map
+// }
